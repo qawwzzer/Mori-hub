@@ -1,6 +1,11 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+-- ตัวแปรเก็บค่าสีที่ผู้ใช้เลือก
+local selectedNameColor = Color3.fromRGB(255, 0, 0)
+local selectedBoxColor = Color3.fromRGB(255, 0, 0)
+local ShowBoxESP = true  -- เปิด/ปิด Box ESP
+
 local ESPEnabledPlayers = {}
 
 -- 📦 GUI Setup
@@ -9,27 +14,33 @@ gui.Name = "ESP_UI"
 gui.ResetOnSpawn = false
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- 🔘 ปุ่มเปิด/ปิด UI
+-- 🔘 ปุ่มเปิด/ปิด UI (เป็นสีเหลี่ยม)
 local toggleButton = Instance.new("TextButton", gui)
-toggleButton.Size = UDim2.new(0, 100, 0, 40)
+toggleButton.Size = UDim2.new(0, 100, 0, 40) -- ขนาดเปลี่ยนเป็นสี่เหลี่ยม
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Text = "Menu" -- แก้ตรงนี้
-toggleButton.TextSize = 16
-toggleButton.Font = Enum.Font.SourceSans
+toggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+toggleButton.Text = "menu"
+toggleButton.TextSize = 25
+toggleButton.Font = Enum.Font.SourceSansBold
 toggleButton.Active = true
 toggleButton.Draggable = true
 
+
+-- ทำให้ปุ่มเปิด/ปิดเมนูเป็นวงกลม
+local corner = Instance.new("UICorner", toggleButton)
+corner.CornerRadius = UDim.new(1, 0)
+
 -- 🪟 Frame หลัก
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 320, 0, 160)
+frame.Size = UDim2.new(0, 320, 0, 290)
 frame.Position = UDim2.new(0, 10, 0, 60)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BorderSizePixel = 0
 frame.Visible = true
 frame.Active = true
 frame.Draggable = true
+frame.BackgroundTransparency = 0.5  -- ทำให้โปร่งใส
 
 -- หัวข้อ
 local title = Instance.new("TextLabel", frame)
@@ -42,7 +53,7 @@ title.Font = Enum.Font.SourceSansBold
 
 -- รายชื่อ
 local scrolling = Instance.new("ScrollingFrame", frame)
-scrolling.Size = UDim2.new(1, -40, 1, -30)
+scrolling.Size = UDim2.new(1, -40, 0, 80)
 scrolling.Position = UDim2.new(0, 0, 0, 30)
 scrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrolling.ScrollBarThickness = 6
@@ -52,7 +63,7 @@ scrolling.BackgroundTransparency = 1
 -- ปุ่มรีเฟรชชื่อ
 local refreshButton = Instance.new("TextButton", frame)
 refreshButton.Size = UDim2.new(1, 0, 0, 30)
-refreshButton.Position = UDim2.new(0, 0, 1, -30)
+refreshButton.Position = UDim2.new(0, 0, 0, 110)
 refreshButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 refreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 refreshButton.Font = Enum.Font.SourceSansBold
@@ -62,8 +73,9 @@ refreshButton.Text = "🔁 รีเซ็ตรายชื่อ"
 -- ✅ สร้าง ESP
 local function addESP(player)
 	local char = player.Character
-	if not (char and char:FindFirstChild("Head")) then return end
-	if char.Head:FindFirstChild("ESP") then return end
+	if not (char and char:FindFirstChild("Head") and char:FindFirstChild("HumanoidRootPart")) then return end
+
+	if char.Head:FindFirstChild("ESP") or char:FindFirstChild("BoxESP") then return end
 
 	local esp = Instance.new("BillboardGui", char.Head)
 	esp.Name = "ESP"
@@ -76,24 +88,41 @@ local function addESP(player)
 	label.Size = UDim2.new(1, 0, 1, 0)
 	label.BackgroundTransparency = 1
 	label.Text = player.Name
-	label.TextColor3 = Color3.fromRGB(0, 255, 0)
+	label.TextColor3 = selectedNameColor
 	label.TextStrokeTransparency = 0.5
 	label.TextScaled = false
 	label.TextSize = 18
 	label.Font = Enum.Font.SourceSans
+
+	-- เปิด Box ESP
+	if ShowBoxESP then
+		local box = Instance.new("BoxHandleAdornment")
+		box.Name = "BoxESP"
+		box.Adornee = char.HumanoidRootPart
+		box.Size = Vector3.new(4, 6, 2)
+		box.Color3 = selectedBoxColor
+		box.Transparency = 0.5
+		box.ZIndex = 0
+		box.AlwaysOnTop = true
+		box.Parent = char
+	end
 end
 
 -- ❌ ลบ ESP
 local function removeESP(player)
-	if player.Character and player.Character:FindFirstChild("Head") then
-		local esp = player.Character.Head:FindFirstChild("ESP")
-		if esp then
-			esp:Destroy()
-		end
+	local char = player.Character
+	if not char then return end
+
+	if char:FindFirstChild("Head") then
+		local esp = char.Head:FindFirstChild("ESP")
+		if esp then esp:Destroy() end
 	end
+
+	local box = char:FindFirstChild("BoxESP")
+	if box then box:Destroy() end
 end
 
--- 🔁 อัปเดตรายชื่อใน UI
+-- 🔁 อัปเดตรายชื่อ
 local function updatePlayerList()
 	scrolling:ClearAllChildren()
 	local players = Players:GetPlayers()
@@ -117,7 +146,15 @@ local function updatePlayerList()
 					removeESP(player)
 				else
 					ESPEnabledPlayers[player.Name] = true
-					addESP(player)
+					if player.Character then
+						addESP(player)
+					end
+					player.CharacterAdded:Connect(function()
+						wait(1)
+						if ESPEnabledPlayers[player.Name] then
+							addESP(player)
+						end
+					end)
 				end
 				updatePlayerList()
 			end)
@@ -137,7 +174,7 @@ local function onCharacterAdded(player)
 	end
 end
 
--- ผู้เล่นใหม่เข้า
+-- ผู้เล่นใหม่
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function()
 		onCharacterAdded(player)
@@ -168,6 +205,86 @@ end)
 -- 🔁 ปุ่มรีเฟรชชื่อ
 refreshButton.MouseButton1Click:Connect(function()
 	updatePlayerList()
+end)
+
+-- ปุ่มเปิด/ปิด Box ESP
+local boxToggle = Instance.new("TextButton", frame)
+boxToggle.Size = UDim2.new(1, 0, 0, 30)
+boxToggle.Position = UDim2.new(0, 0, 0, 150)
+boxToggle.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+boxToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+boxToggle.Font = Enum.Font.SourceSansBold
+boxToggle.TextSize = 16
+boxToggle.Text = ShowBoxESP and "ปิด Box ESP" or "เปิด Box ESP"
+
+boxToggle.MouseButton1Click:Connect(function()
+	ShowBoxESP = not ShowBoxESP
+	boxToggle.Text = ShowBoxESP and "ปิด Box ESP" or "เปิด Box ESP"
+
+	-- อัปเดตการแสดงผล ESP ทุกครั้งที่เปลี่ยนสถานะ
+	for playerName, _ in pairs(ESPEnabledPlayers) do
+		local player = Players:FindFirstChild(playerName)
+		if player then
+			removeESP(player)
+			if player.Character then
+				addESP(player)
+			end
+		end
+	end
+end)
+
+-- ปุ่มเลือกสีสำหรับ Username
+local nameColorButton = Instance.new("TextButton", frame)
+nameColorButton.Size = UDim2.new(1, 0, 0, 30)
+nameColorButton.Position = UDim2.new(0, 0, 0, 180)
+nameColorButton.BackgroundColor3 = selectedNameColor
+nameColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+nameColorButton.Font = Enum.Font.SourceSansBold
+nameColorButton.TextSize = 16
+nameColorButton.Text = "เลือกสี Username"
+
+nameColorButton.MouseButton1Click:Connect(function()
+	-- เปลี่ยนสี Username ตามที่ผู้เล่นเลือก
+	selectedNameColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+	nameColorButton.BackgroundColor3 = selectedNameColor
+
+	-- อัปเดต ESP ของผู้เล่นทั้งหมด
+	for playerName, _ in pairs(ESPEnabledPlayers) do
+		local player = Players:FindFirstChild(playerName)
+		if player then
+			removeESP(player)
+			if player.Character then
+				addESP(player)
+			end
+		end
+	end
+end)
+
+-- ปุ่มเลือกสีสำหรับ Box
+local boxColorButton = Instance.new("TextButton", frame)
+boxColorButton.Size = UDim2.new(1, 0, 0, 30)
+boxColorButton.Position = UDim2.new(0, 0, 0, 210)
+boxColorButton.BackgroundColor3 = selectedBoxColor
+boxColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+boxColorButton.Font = Enum.Font.SourceSansBold
+boxColorButton.TextSize = 16
+boxColorButton.Text = "เลือกสี Box"
+
+boxColorButton.MouseButton1Click:Connect(function()
+	-- เปลี่ยนสี Box ตามที่ผู้เล่นเลือก
+	selectedBoxColor = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+	boxColorButton.BackgroundColor3 = selectedBoxColor
+
+	-- อัปเดต ESP ของผู้เล่นทั้งหมด
+	for playerName, _ in pairs(ESPEnabledPlayers) do
+		local player = Players:FindFirstChild(playerName)
+		if player then
+			removeESP(player)
+			if player.Character then
+				addESP(player)
+			end
+		end
+	end
 end)
 
 -- เริ่มต้น
