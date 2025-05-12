@@ -16,7 +16,7 @@ gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 -- 🔘 ปุ่มเปิด/ปิด UI (เป็นสีเหลี่ยม)
 local toggleButton = Instance.new("TextButton", gui)
-toggleButton.Size = UDim2.new(0, 100, 0, 40) -- ขนาดเปลี่ยนเป็นสี่เหลี่ยม
+toggleButton.Size = UDim2.new(0, 70, 0, 20) -- ขนาดเปลี่ยนเป็นสี่เหลี่ยม
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
 toggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
