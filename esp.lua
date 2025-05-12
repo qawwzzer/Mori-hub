@@ -33,7 +33,7 @@ corner.CornerRadius = UDim.new(0.1, 0)
 
 -- 🪟 Frame หลัก
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 280, 0, 270)
+frame.Size = UDim2.new(0, 250, 0, 210)
 frame.Position = UDim2.new(0, 10, 0, 60)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BorderSizePixel = 0
