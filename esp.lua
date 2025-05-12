@@ -29,11 +29,11 @@ toggleButton.Draggable = true
 
 -- ทำให้ปุ่มเปิด/ปิดเมนูเป็นวงกลม
 local corner = Instance.new("UICorner", toggleButton)
-corner.CornerRadius = UDim.new(1, 0)
+corner.CornerRadius = UDim.new(0.1, 0)
 
 -- 🪟 Frame หลัก
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 320, 0, 290)
+frame.Size = UDim2.new(0, 280, 0, 270)
 frame.Position = UDim2.new(0, 10, 0, 60)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BorderSizePixel = 0
