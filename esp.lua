@@ -16,9 +16,9 @@ gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 -- 🔘 ปุ่มเปิด/ปิด UI (เป็นสีเหลี่ยม)
 local toggleButton = Instance.new("TextButton", gui)
-toggleButton.Size = UDim2.new(0, 70, 0, 20) -- ขนาดเปลี่ยนเป็นสี่เหลี่ยม
+toggleButton.Size = UDim2.new(0, 100, 0, 40) -- ขนาดเปลี่ยนเป็นสี่เหลี่ยม
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
-toggleButton.BackgroundColor3 = Color3.fromRGB(0, 100, 250)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 200)
 toggleButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 toggleButton.Text = "menu"
 toggleButton.TextSize = 15
@@ -29,11 +29,11 @@ toggleButton.Draggable = true
 
 -- ทำให้ปุ่มเปิด/ปิดเมนูเป็นวงกลม
 local corner = Instance.new("UICorner", toggleButton)
-corner.CornerRadius = UDim.new(0.1, 0)
+corner.CornerRadius = UDim.new(1, 0)
 
 -- 🪟 Frame หลัก
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 280, 0, 200)
+frame.Size = UDim2.new(0, 320, 0, 290)
 frame.Position = UDim2.new(0, 10, 0, 60)
 frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 frame.BorderSizePixel = 0
@@ -214,8 +214,8 @@ boxToggle.Position = UDim2.new(0, 0, 0, 150)
 boxToggle.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 boxToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 boxToggle.Font = Enum.Font.SourceSansBold
-boxToggle.TextSize = 16
-boxToggle.Text = ShowBoxESP and "ปิด Box ESP" or "เปิด Box ESP"
+boxToggle.TextSize = 15
+boxToggle.Text = ShowBoxESP and "of Box ESP" or "on Box ESP"
 
 boxToggle.MouseButton1Click:Connect(function()
 	ShowBoxESP = not ShowBoxESP
@@ -240,7 +240,7 @@ nameColorButton.Position = UDim2.new(0, 0, 0, 180)
 nameColorButton.BackgroundColor3 = selectedNameColor
 nameColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 nameColorButton.Font = Enum.Font.SourceSansBold
-nameColorButton.TextSize = 16
+nameColorButton.TextSize = 15
 nameColorButton.Text = "เลือกสี Username"
 
 nameColorButton.MouseButton1Click:Connect(function()
