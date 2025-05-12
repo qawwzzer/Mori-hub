@@ -34,7 +34,7 @@ frame.BackgroundTransparency = 0.5
 
 local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 30)
-title.Text = "เลือกชื่อผู้เล่น"
+title.Text = "ESP Players"
 title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 16
@@ -104,7 +104,7 @@ local function updatePlayerList()
 	allButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	allButton.Font = Enum.Font.SourceSansBold
 	allButton.TextSize = 15
-	allButton.Text = "เลือกทั้งหมด"
+	allButton.Text = "ALL"
 	allButton.MouseButton1Click:Connect(function()
 		for _, player in ipairs(players) do
 			if player ~= LocalPlayer then
@@ -124,7 +124,7 @@ local function updatePlayerList()
 	clearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 	clearButton.Font = Enum.Font.SourceSansBold
 	clearButton.TextSize = 15
-	clearButton.Text = "ยกเลิกทั้งหมด"
+	clearButton.Text = "Cancel All"
 	clearButton.MouseButton1Click:Connect(function()
 		for _, player in ipairs(players) do
 			if player ~= LocalPlayer then
@@ -214,7 +214,7 @@ refreshButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 refreshButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 refreshButton.Font = Enum.Font.SourceSansBold
 refreshButton.TextSize = 16
-refreshButton.Text = "🔁 รีเซ็ตรายชื่อ"
+refreshButton.Text = "🔁 reset players"
 refreshButton.MouseButton1Click:Connect(function()
 	updatePlayerList()
 end)
@@ -226,10 +226,10 @@ boxToggle.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 boxToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 boxToggle.Font = Enum.Font.SourceSansBold
 boxToggle.TextSize = 15
-boxToggle.Text = ShowBoxESP and "เปิด Box ESP" or "ปิด Box ESP"
+boxToggle.Text = ShowBoxESP and "OFF Box ESP" or "ON Box ESP"
 boxToggle.MouseButton1Click:Connect(function()
 	ShowBoxESP = not ShowBoxESP
-	boxToggle.Text = ShowBoxESP and "ปิด Box ESP" or "เปิด Box ESP"
+	boxToggle.Text = ShowBoxESP and "OFF Box ESP" or "ON Box ESP"
 	for playerName, _ in pairs(ESPEnabledPlayers) do
 		local player = Players:FindFirstChild(playerName)
 		if player then
@@ -248,7 +248,7 @@ nameColorButton.BackgroundColor3 = selectedNameColor
 nameColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 nameColorButton.Font = Enum.Font.SourceSansBold
 nameColorButton.TextSize = 15
-nameColorButton.Text = "เลือกสี Username"
+nameColorButton.Text = "coller Username"
 nameColorButton.MouseButton1Click:Connect(function()
 	selectedNameColor = Color3.fromRGB(math.random(0,255), math.random(0,255), math.random(0,255))
 	nameColorButton.BackgroundColor3 = selectedNameColor
@@ -268,7 +268,7 @@ boxColorButton.BackgroundColor3 = selectedBoxColor
 boxColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 boxColorButton.Font = Enum.Font.SourceSansBold
 boxColorButton.TextSize = 15
-boxColorButton.Text = "เลือกสี Box"
+boxColorButton.Text = "coller Box"
 boxColorButton.MouseButton1Click:Connect(function()
 	selectedBoxColor = Color3.fromRGB(math.random(0,255), math.random(0,255), math.random(0,255))
 	boxColorButton.BackgroundColor3 = selectedBoxColor
