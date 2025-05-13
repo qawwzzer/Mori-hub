@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
@@ -8,11 +7,12 @@ local Mouse = LocalPlayer:GetMouse()
 -- CONFIG
 local aimbotEnabled = false
 local fovEnabled = true
-local smoothness = 1
-local fovRadius = 50
+local smoothness = 0.2
+local fovRadius = 100
 local aimPart = "Head"
 local currentTarget = nil
 local highlightBox = nil
+local fovYOffset = 0
 
 -- FOV Drawing
 local fovCircle = Drawing.new("Circle")
@@ -28,7 +28,7 @@ gui.Name = "MORI HUB AIMBOT"
 gui.ResetOnSpawn = false
 gui.Parent = game.CoreGui
 
--- MENU Button (Draggable)
+-- MENU Button
 local menuToggle = Instance.new("TextButton")
 menuToggle.Text = "MENU"
 menuToggle.Size = UDim2.new(0, 80, 0, 30)
@@ -39,9 +39,9 @@ menuToggle.Draggable = true
 menuToggle.Active = true
 menuToggle.Parent = gui
 
--- MainFrame (UI เมนู)
+-- MainFrame
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 240, 0, 240)
+MainFrame.Size = UDim2.new(0, 260, 0, 320)
 MainFrame.Position = UDim2.new(0, 110, 0, 100)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.Active = true
@@ -50,16 +50,15 @@ MainFrame.Visible = false
 MainFrame.Parent = gui
 Instance.new("UICorner", MainFrame)
 
--- Title Label
+-- Title
 local Title = Instance.new("TextLabel", MainFrame)
 Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Position = UDim2.new(0, 0, 0, 0)
 Title.Text = "MORI HUB AIMBOT"
 Title.TextColor3 = Color3.fromRGB(0, 255, 255)
 Title.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 Title.TextScaled = true
 
--- Aimbot Toggle Button
+-- Aimbot Toggle
 local AimbotToggle = Instance.new("TextButton", MainFrame)
 AimbotToggle.Size = UDim2.new(1, -20, 0, 30)
 AimbotToggle.Position = UDim2.new(0, 10, 0, 40)
@@ -67,7 +66,7 @@ AimbotToggle.Text = "Aimbot: OFF"
 AimbotToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 AimbotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- FOV Toggle Button
+-- FOV Toggle
 local FOVToggle = Instance.new("TextButton", MainFrame)
 FOVToggle.Size = UDim2.new(1, -20, 0, 30)
 FOVToggle.Position = UDim2.new(0, 10, 0, 80)
@@ -91,7 +90,7 @@ SmoothBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 SmoothBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 SmoothBox.ClearTextOnFocus = false
 
--- FOV Input
+-- FOV Radius
 local FOVLabel = Instance.new("TextLabel", MainFrame)
 FOVLabel.Size = UDim2.new(1, -20, 0, 20)
 FOVLabel.Position = UDim2.new(0, 10, 0, 175)
@@ -107,7 +106,47 @@ FOVBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 FOVBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 FOVBox.ClearTextOnFocus = false
 
--- Menu Toggle
+-- FOV Y Offset Label
+local YOffsetLabel = Instance.new("TextLabel", MainFrame)
+YOffsetLabel.Size = UDim2.new(1, -20, 0, 20)
+YOffsetLabel.Position = UDim2.new(0, 10, 0, 230)
+YOffsetLabel.Text = "FOV Y Offset: " .. tostring(fovYOffset)
+YOffsetLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+YOffsetLabel.BackgroundTransparency = 1
+YOffsetLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- ปุ่ม -
+local YOffsetMinus = Instance.new("TextButton", MainFrame)
+YOffsetMinus.Size = UDim2.new(0, 30, 0, 30)
+YOffsetMinus.Position = UDim2.new(0, 10, 0, 255)
+YOffsetMinus.Text = "-"
+YOffsetMinus.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+YOffsetMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- ปุ่ม +
+local YOffsetPlus = Instance.new("TextButton", MainFrame)
+YOffsetPlus.Size = UDim2.new(0, 30, 0, 30)
+YOffsetPlus.Position = UDim2.new(0, 50, 0, 255)
+YOffsetPlus.Text = "+"
+YOffsetPlus.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+YOffsetPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- อัปเดต Label
+local function updateYOffsetLabel()
+	YOffsetLabel.Text = "FOV Y Offset: " .. tostring(fovYOffset)
+end
+
+YOffsetMinus.MouseButton1Click:Connect(function()
+	fovYOffset = math.clamp(fovYOffset - 10, -500, 500)
+	updateYOffsetLabel()
+end)
+
+YOffsetPlus.MouseButton1Click:Connect(function()
+	fovYOffset = math.clamp(fovYOffset + 10, -500, 500)
+	updateYOffsetLabel()
+end)
+
+-- การทำงานของปุ่ม
 menuToggle.MouseButton1Click:Connect(function()
 	MainFrame.Visible = not MainFrame.Visible
 end)
@@ -138,7 +177,7 @@ FOVBox.FocusLost:Connect(function()
 	end
 end)
 
--- Highlight Box
+-- Highlight เป้าหมาย
 local function createHighlight(targetModel)
 	if highlightBox then highlightBox:Destroy() end
 	local box = Instance.new("Highlight")
@@ -150,7 +189,7 @@ local function createHighlight(targetModel)
 	highlightBox = box
 end
 
--- Target Finder
+-- หาเป้าใกล้สุด
 local function getClosestTarget()
 	local closest, shortestDistance = nil, math.huge
 
@@ -159,7 +198,7 @@ local function getClosestTarget()
 			local part = player.Character[aimPart]
 			local pos, visible = Camera:WorldToViewportPoint(part.Position)
 			local screenPos = Vector2.new(pos.X, pos.Y)
-			local dist = (screenPos - Camera.ViewportSize / 2).Magnitude
+			local dist = (screenPos - (Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset))).Magnitude
 
 			if visible and dist < shortestDistance and (not fovEnabled or dist <= fovRadius) then
 				shortestDistance = dist
@@ -171,9 +210,9 @@ local function getClosestTarget()
 	return closest
 end
 
--- Aimbot Loop
+-- Aimbot ทำงาน
 RunService.RenderStepped:Connect(function()
-	fovCircle.Position = Camera.ViewportSize / 2
+	fovCircle.Position = Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset)
 
 	if aimbotEnabled then
 		local targetPlayer = getClosestTarget()
@@ -197,7 +236,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- ฟื้น UI เมื่อตาย
+-- ฟื้น UI เมื่อ respawn
 LocalPlayer.CharacterAdded:Connect(function()
 	task.wait(1)
 	gui.Parent = game.CoreGui
