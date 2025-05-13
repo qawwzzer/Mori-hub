@@ -8,8 +8,8 @@ local Mouse = LocalPlayer:GetMouse()
 -- CONFIG
 local aimbotEnabled = false
 local fovEnabled = true
-local smoothness = 0.2
-local fovRadius = 120
+local smoothness = 1
+local fovRadius = 50
 local aimPart = "Head"
 local currentTarget = nil
 local highlightBox = nil
