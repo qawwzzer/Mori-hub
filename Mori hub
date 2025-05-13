@@ -1,162 +1,204 @@
--- MORI HUB AIMBOT (Fully Integrated UI + White FOV + Configurable)
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
+local Mouse = LocalPlayer:GetMouse()
 
--- Aimbot Settings
-local aimbotEnabled = true
+-- CONFIG
+local aimbotEnabled = false
 local fovEnabled = true
-local fovRadius = 100
 local smoothness = 0.2
+local fovRadius = 120
 local aimPart = "Head"
 local currentTarget = nil
+local highlightBox = nil
 
--- Create White FOV Circle
+-- FOV Drawing
 local fovCircle = Drawing.new("Circle")
-fovCircle.Color = Color3.fromRGB(255, 255, 255)
+fovCircle.Color = Color3.fromRGB(255, 0, 0)
 fovCircle.Thickness = 1
-fovCircle.Radius = fovRadius
 fovCircle.Filled = false
-fovCircle.Transparency = 1
+fovCircle.Radius = fovRadius
+fovCircle.Visible = fovEnabled
 
--- UI Setup
-local screenGui = Instance.new("ScreenGui", game.CoreGui)
-screenGui.Name = "MORI_HUB_AIMBOT"
-screenGui.ResetOnSpawn = false
+-- GUI Setup
+local gui = Instance.new("ScreenGui")
+gui.Name = "MORI HUB AIMBOT"
+gui.ResetOnSpawn = false
+gui.Parent = game.CoreGui
 
-local toggleButton = Instance.new("TextButton", screenGui)
-toggleButton.Size = UDim2.new(0, 100, 0, 30)
-toggleButton.Position = UDim2.new(0, 10, 0, 10)
-toggleButton.Text = "MENU"
-toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-toggleButton.TextColor3 = Color3.new(1,1,1)
-toggleButton.Active = true
-toggleButton.Draggable = true
+-- MENU Button (Draggable)
+local menuToggle = Instance.new("TextButton")
+menuToggle.Text = "MENU"
+menuToggle.Size = UDim2.new(0, 80, 0, 30)
+menuToggle.Position = UDim2.new(0, 20, 0, 100)
+menuToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+menuToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+menuToggle.Draggable = true
+menuToggle.Active = true
+menuToggle.Parent = gui
 
-local mainFrame = Instance.new("Frame", screenGui)
-mainFrame.Size = UDim2.new(0, 250, 0, 200)
-mainFrame.Position = UDim2.new(0, 120, 0, 10)
-mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-mainFrame.Visible = true
-mainFrame.Active = true
-mainFrame.Draggable = true
+-- MainFrame (UI เมนู)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 240, 0, 240)
+MainFrame.Position = UDim2.new(0, 110, 0, 100)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.Parent = gui
+Instance.new("UICorner", MainFrame)
 
-local title = Instance.new("TextLabel", mainFrame)
-title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundTransparency = 1
-title.Text = "MORI HUB AIMBOT"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.SourceSansBold
-title.TextScaled = true
+-- Title Label
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.Text = "MORI HUB AIMBOT"
+Title.TextColor3 = Color3.fromRGB(0, 255, 255)
+Title.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Title.TextScaled = true
 
--- Toggle Buttons and Inputs
-local function createToggle(name, default, yPos, callback)
-	local btn = Instance.new("TextButton", mainFrame)
-	btn.Size = UDim2.new(1, -20, 0, 25)
-	btn.Position = UDim2.new(0, 10, 0, yPos)
-	btn.Text = name .. ": " .. (default and "ON" or "OFF")
-	btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.MouseButton1Click:Connect(function()
-		default = not default
-		btn.Text = name .. ": " .. (default and "ON" or "OFF")
-		callback(default)
-	end)
-end
+-- Aimbot Toggle Button
+local AimbotToggle = Instance.new("TextButton", MainFrame)
+AimbotToggle.Size = UDim2.new(1, -20, 0, 30)
+AimbotToggle.Position = UDim2.new(0, 10, 0, 40)
+AimbotToggle.Text = "Aimbot: OFF"
+AimbotToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+AimbotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-local function createInput(name, default, yPos, callback)
-	local label = Instance.new("TextLabel", mainFrame)
-	label.Size = UDim2.new(0.5, -15, 0, 25)
-	label.Position = UDim2.new(0, 10, 0, yPos)
-	label.Text = name
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundTransparency = 1
-	label.TextXAlignment = Enum.TextXAlignment.Left
+-- FOV Toggle Button
+local FOVToggle = Instance.new("TextButton", MainFrame)
+FOVToggle.Size = UDim2.new(1, -20, 0, 30)
+FOVToggle.Position = UDim2.new(0, 10, 0, 80)
+FOVToggle.Text = "FOV: ON"
+FOVToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+FOVToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
 
-	local input = Instance.new("TextBox", mainFrame)
-	input.Size = UDim2.new(0.5, -15, 0, 25)
-	input.Position = UDim2.new(0.5, 5, 0, yPos)
-	input.Text = tostring(default)
-	input.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	input.TextColor3 = Color3.new(1,1,1)
+-- Smoothness
+local SmoothLabel = Instance.new("TextLabel", MainFrame)
+SmoothLabel.Size = UDim2.new(1, -20, 0, 20)
+SmoothLabel.Position = UDim2.new(0, 10, 0, 120)
+SmoothLabel.Text = "Smoothness:"
+SmoothLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SmoothLabel.BackgroundTransparency = 1
 
-	input.FocusLost:Connect(function()
-		local val = tonumber(input.Text)
-		if val then
-			callback(val)
-		end
-	end)
-end
+local SmoothBox = Instance.new("TextBox", MainFrame)
+SmoothBox.Size = UDim2.new(1, -20, 0, 30)
+SmoothBox.Position = UDim2.new(0, 10, 0, 140)
+SmoothBox.Text = tostring(smoothness)
+SmoothBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+SmoothBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SmoothBox.ClearTextOnFocus = false
 
-createToggle("Aimbot", aimbotEnabled, 35, function(val) aimbotEnabled = val end)
-createToggle("FOV", fovEnabled, 65, function(val) fovEnabled = val end)
-createInput("FOV Radius", fovRadius, 95, function(val) fovRadius = val; fovCircle.Radius = val end)
-createInput("Smooth", smoothness, 125, function(val) smoothness = val end)
+-- FOV Input
+local FOVLabel = Instance.new("TextLabel", MainFrame)
+FOVLabel.Size = UDim2.new(1, -20, 0, 20)
+FOVLabel.Position = UDim2.new(0, 10, 0, 175)
+FOVLabel.Text = "FOV Radius:"
+FOVLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+FOVLabel.BackgroundTransparency = 1
 
--- Toggle UI Visibility
-toggleButton.MouseButton1Click:Connect(function()
-	mainFrame.Visible = not mainFrame.Visible
+local FOVBox = Instance.new("TextBox", MainFrame)
+FOVBox.Size = UDim2.new(1, -20, 0, 30)
+FOVBox.Position = UDim2.new(0, 10, 0, 195)
+FOVBox.Text = tostring(fovRadius)
+FOVBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+FOVBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+FOVBox.ClearTextOnFocus = false
+
+-- Menu Toggle
+menuToggle.MouseButton1Click:Connect(function()
+	MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Get Closest Target in FOV
+AimbotToggle.MouseButton1Click:Connect(function()
+	aimbotEnabled = not aimbotEnabled
+	AimbotToggle.Text = "Aimbot: " .. (aimbotEnabled and "ON" or "OFF")
+end)
+
+FOVToggle.MouseButton1Click:Connect(function()
+	fovEnabled = not fovEnabled
+	FOVToggle.Text = "FOV: " .. (fovEnabled and "ON" or "OFF")
+	fovCircle.Visible = fovEnabled
+end)
+
+SmoothBox.FocusLost:Connect(function()
+	local val = tonumber(SmoothBox.Text)
+	if val then
+		smoothness = math.clamp(val, 0, 1)
+	end
+end)
+
+FOVBox.FocusLost:Connect(function()
+	local val = tonumber(FOVBox.Text)
+	if val then
+		fovRadius = math.clamp(val, 20, 500)
+		fovCircle.Radius = fovRadius
+	end
+end)
+
+-- Highlight Box
+local function createHighlight(targetModel)
+	if highlightBox then highlightBox:Destroy() end
+	local box = Instance.new("Highlight")
+	box.FillColor = Color3.fromRGB(255, 255, 255)
+	box.FillTransparency = 0.7
+	box.OutlineTransparency = 1
+	box.Adornee = targetModel
+	box.Parent = game.CoreGui
+	highlightBox = box
+end
+
+-- Target Finder
 local function getClosestTarget()
-	local closest = nil
-	local shortestDist = math.huge
+	local closest, shortestDistance = nil, math.huge
+
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(aimPart) then
 			local part = player.Character[aimPart]
-			local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
-			if onScreen then
-				local dist = (Vector2.new(pos.X, pos.Y) - Camera.ViewportSize / 2).Magnitude
-				if dist < fovRadius and dist < shortestDist then
-					closest = player
-					shortestDist = dist
-				end
+			local pos, visible = Camera:WorldToViewportPoint(part.Position)
+			local screenPos = Vector2.new(pos.X, pos.Y)
+			local dist = (screenPos - Camera.ViewportSize / 2).Magnitude
+
+			if visible and dist < shortestDistance and (not fovEnabled or dist <= fovRadius) then
+				shortestDistance = dist
+				closest = player
 			end
 		end
 	end
+
 	return closest
 end
 
--- Box Highlight
-local highlightBox = Instance.new("BoxHandleAdornment")
-highlightBox.Adornee = nil
-highlightBox.Color3 = Color3.new(1, 1, 1)
-highlightBox.AlwaysOnTop = true
-highlightBox.ZIndex = 10
-highlightBox.Transparency = 0.7
-highlightBox.Size = Vector3.new(3, 5, 1)
-highlightBox.Parent = game.CoreGui
-
--- Main Loop
+-- Aimbot Loop
 RunService.RenderStepped:Connect(function()
-	fovCircle.Position = workspace.CurrentCamera.ViewportSize / 2
-	fovCircle.Visible = fovEnabled
+	fovCircle.Position = Camera.ViewportSize / 2
 
 	if aimbotEnabled then
-		local target = getClosestTarget()
-		if target and target.Character and target.Character:FindFirstChild(aimPart) then
-			local aimPos = target.Character[aimPart].Position
-			local camPos = Camera.CFrame.Position
-			local dir = (aimPos - camPos).Unit
-			local newLook = Camera.CFrame:ToOrientation()
-			local lookAt = CFrame.new(camPos, camPos + dir):ToOrientation()
+		local targetPlayer = getClosestTarget()
+		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild(aimPart) then
+			local part = targetPlayer.Character[aimPart]
+			local prediction = part.Position + part.Velocity * 0.07
+			local origin = Camera.CFrame.Position
+			local direction = (prediction - origin).Unit
+			local newCFrame = CFrame.new(origin, origin + direction)
 
-			local smoothX = newLook
-			local lerpedX = Vector3.new(
-				newLook + (lookAt - newLook) * smoothness
-			)
-			Camera.CFrame = CFrame.new(camPos) * CFrame.fromOrientation(lerpedX.X, lerpedX.Y, lerpedX.Z)
-
-			currentTarget = target
-			highlightBox.Adornee = target.Character
+			Camera.CFrame = Camera.CFrame:Lerp(newCFrame, smoothness)
+			createHighlight(targetPlayer.Character)
+			currentTarget = targetPlayer
 		else
+			if highlightBox then
+				highlightBox:Destroy()
+				highlightBox = nil
+			end
 			currentTarget = nil
-			highlightBox.Adornee = nil
 		end
-	else
-		highlightBox.Adornee = nil
 	end
+end)
+
+-- ฟื้น UI เมื่อตาย
+LocalPlayer.CharacterAdded:Connect(function()
+	task.wait(1)
+	gui.Parent = game.CoreGui
 end)
