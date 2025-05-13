@@ -229,7 +229,7 @@ boxToggle.TextSize = 15
 boxToggle.Text = ShowBoxESP and "OFF Box ESP" or "ON Box ESP"
 boxToggle.MouseButton1Click:Connect(function()
 	ShowBoxESP = not ShowBoxESP
-	boxToggle.Text = ShowBoxESP and "OFF Box ESP" or "ON Box ESP"
+	boxToggle.Text = ShowBoxESP and "ON Box ESP" or "OFF Box ESP"
 	for playerName, _ in pairs(ESPEnabledPlayers) do
 		local player = Players:FindFirstChild(playerName)
 		if player then
