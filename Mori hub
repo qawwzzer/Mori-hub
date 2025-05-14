@@ -1,3 +1,4 @@
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -10,158 +11,120 @@ local fovEnabled = true
 local smoothness = 0.2
 local fovRadius = 100
 local aimPart = "Head"
+local maxDistance = 100
+local fovYOffset = 0
 local currentTarget = nil
 local highlightBox = nil
-local fovYOffset = 0
 
 -- FOV Drawing
 local fovCircle = Drawing.new("Circle")
-fovCircle.Color = Color3.fromRGB(255, 0, 0)
-fovCircle.Thickness = 1
+fovCircle.Color = Color3.fromRGB(0, 255, 255)
+fovCircle.Thickness = 2
 fovCircle.Filled = false
 fovCircle.Radius = fovRadius
 fovCircle.Visible = fovEnabled
 
 -- GUI Setup
 local gui = Instance.new("ScreenGui")
-gui.Name = "MORI HUB AIMBOT"
+gui.Name = "🎯MORI HUB AIMBOT"
 gui.ResetOnSpawn = false
 gui.Parent = game.CoreGui
 
--- MENU Button
+-- MENU Button (สีเหลี่ยมจัตุรัส)
 local menuToggle = Instance.new("TextButton")
-menuToggle.Text = "MENU"
-menuToggle.Size = UDim2.new(0, 80, 0, 30)
-menuToggle.Position = UDim2.new(0, 20, 0, 100)
-menuToggle.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-menuToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-menuToggle.Draggable = true
-menuToggle.Active = true
+menuToggle.Size = UDim2.new(0, 35, 0, 35)  -- ขนาดปุ่ม 35x35 (เล็กลง)
+menuToggle.Position = UDim2.new(0, 20, 0, 50)  -- ตำแหน่งของปุ่ม
+menuToggle.BackgroundColor3 = Color3.fromRGB(0, 255, 255)  -- สีของปุ่ม
+menuToggle.Text = "Menu"  -- เปลี่ยนข้อความเป็น "Menu"
+menuToggle.TextColor3 = Color3.fromRGB(0, 0, 0)  -- สีข้อความในปุ่ม
+menuToggle.Font = Enum.Font.Gotham
+menuToggle.TextSize = 16
 menuToggle.Parent = gui
 
--- MainFrame
+-- ทำให้ปุ่มสามารถลากได้
+menuToggle.Draggable = true
+
+-- Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 260, 0, 320)
-MainFrame.Position = UDim2.new(0, 110, 0, 100)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.Size = UDim2.new(0, 300, 0, 330)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -165)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderColor3 = Color3.fromRGB(0, 255, 255)
+MainFrame.BorderSizePixel = 2
+MainFrame.Visible = false
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = false
 MainFrame.Parent = gui
-Instance.new("UICorner", MainFrame)
 
--- Title
-local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "MORI HUB AIMBOT"
-Title.TextColor3 = Color3.fromRGB(0, 255, 255)
-Title.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Title.TextScaled = true
+local UICorner = Instance.new("UICorner", MainFrame)
+UICorner.CornerRadius = UDim.new(0, 6)
 
--- Aimbot Toggle
-local AimbotToggle = Instance.new("TextButton", MainFrame)
-AimbotToggle.Size = UDim2.new(1, -20, 0, 30)
-AimbotToggle.Position = UDim2.new(0, 10, 0, 40)
-AimbotToggle.Text = "Aimbot: OFF"
-AimbotToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-AimbotToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- FOV Toggle
-local FOVToggle = Instance.new("TextButton", MainFrame)
-FOVToggle.Size = UDim2.new(1, -20, 0, 30)
-FOVToggle.Position = UDim2.new(0, 10, 0, 80)
-FOVToggle.Text = "FOV: ON"
-FOVToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-FOVToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- Smoothness
-local SmoothLabel = Instance.new("TextLabel", MainFrame)
-SmoothLabel.Size = UDim2.new(1, -20, 0, 20)
-SmoothLabel.Position = UDim2.new(0, 10, 0, 120)
-SmoothLabel.Text = "Smoothness:"
-SmoothLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-SmoothLabel.BackgroundTransparency = 1
-
-local SmoothBox = Instance.new("TextBox", MainFrame)
-SmoothBox.Size = UDim2.new(1, -20, 0, 30)
-SmoothBox.Position = UDim2.new(0, 10, 0, 140)
-SmoothBox.Text = tostring(smoothness)
-SmoothBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-SmoothBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-SmoothBox.ClearTextOnFocus = false
-
--- FOV Radius
-local FOVLabel = Instance.new("TextLabel", MainFrame)
-FOVLabel.Size = UDim2.new(1, -20, 0, 20)
-FOVLabel.Position = UDim2.new(0, 10, 0, 175)
-FOVLabel.Text = "FOV Radius:"
-FOVLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-FOVLabel.BackgroundTransparency = 1
-
-local FOVBox = Instance.new("TextBox", MainFrame)
-FOVBox.Size = UDim2.new(1, -20, 0, 30)
-FOVBox.Position = UDim2.new(0, 10, 0, 195)
-FOVBox.Text = tostring(fovRadius)
-FOVBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-FOVBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-FOVBox.ClearTextOnFocus = false
-
--- FOV Y Offset Label
-local YOffsetLabel = Instance.new("TextLabel", MainFrame)
-YOffsetLabel.Size = UDim2.new(1, -20, 0, 20)
-YOffsetLabel.Position = UDim2.new(0, 10, 0, 230)
-YOffsetLabel.Text = "FOV Y Offset: " .. tostring(fovYOffset)
-YOffsetLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-YOffsetLabel.BackgroundTransparency = 1
-YOffsetLabel.TextXAlignment = Enum.TextXAlignment.Left
-
--- ปุ่ม -
-local YOffsetMinus = Instance.new("TextButton", MainFrame)
-YOffsetMinus.Size = UDim2.new(0, 30, 0, 30)
-YOffsetMinus.Position = UDim2.new(0, 10, 0, 255)
-YOffsetMinus.Text = "-"
-YOffsetMinus.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-YOffsetMinus.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- ปุ่ม +
-local YOffsetPlus = Instance.new("TextButton", MainFrame)
-YOffsetPlus.Size = UDim2.new(0, 30, 0, 30)
-YOffsetPlus.Position = UDim2.new(0, 50, 0, 255)
-YOffsetPlus.Text = "+"
-YOffsetPlus.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-YOffsetPlus.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- อัปเดต Label
-local function updateYOffsetLabel()
-	YOffsetLabel.Text = "FOV Y Offset: " .. tostring(fovYOffset)
+-- Helper function to create labeled elements
+local function createLabel(text, positionY)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -20, 0, 20)
+	label.Position = UDim2.new(0, 10, 0, positionY)
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(0, 255, 255)
+	label.BackgroundTransparency = 1
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 14
+	label.Parent = MainFrame
+	return label
 end
 
-YOffsetMinus.MouseButton1Click:Connect(function()
-	fovYOffset = math.clamp(fovYOffset - 10, -500, 500)
-	updateYOffsetLabel()
-end)
+local function createBox(defaultText, positionY)
+	local box = Instance.new("TextBox")
+	box.Size = UDim2.new(1, -20, 0, 25)
+	box.Position = UDim2.new(0, 10, 0, positionY)
+	box.Text = defaultText
+	box.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	box.TextColor3 = Color3.fromRGB(255, 255, 255)
+	box.Font = Enum.Font.Gotham
+	box.TextSize = 14
+	box.ClearTextOnFocus = false
+	box.Parent = MainFrame
+	return box
+end
 
-YOffsetPlus.MouseButton1Click:Connect(function()
-	fovYOffset = math.clamp(fovYOffset + 10, -500, 500)
-	updateYOffsetLabel()
-end)
+local function createButton(text, positionY)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -20, 0, 25)
+	btn.Position = UDim2.new(0, 10, 0, positionY)
+	btn.Text = text
+	btn.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+	btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.Parent = MainFrame
+	return btn
+end
 
--- การทำงานของปุ่ม
-menuToggle.MouseButton1Click:Connect(function()
-	MainFrame.Visible = not MainFrame.Visible
-end)
+-- Title
+local Title = createLabel("🎯MORI HUB AIMBOT", 0)
+Title.TextXAlignment = Enum.TextXAlignment.Center
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.TextSize = 16
 
+-- Aimbot
+local AimbotToggle = createButton("Aimbot: OFF", 35)
 AimbotToggle.MouseButton1Click:Connect(function()
 	aimbotEnabled = not aimbotEnabled
 	AimbotToggle.Text = "Aimbot: " .. (aimbotEnabled and "ON" or "OFF")
 end)
 
+-- FOV
+local FOVToggle = createButton("FOV: ON", 65)
 FOVToggle.MouseButton1Click:Connect(function()
 	fovEnabled = not fovEnabled
 	FOVToggle.Text = "FOV: " .. (fovEnabled and "ON" or "OFF")
 	fovCircle.Visible = fovEnabled
 end)
 
+-- Smoothness
+createLabel("Smoothness:", 95)
+local SmoothBox = createBox(tostring(smoothness), 115)
 SmoothBox.FocusLost:Connect(function()
 	local val = tonumber(SmoothBox.Text)
 	if val then
@@ -169,6 +132,9 @@ SmoothBox.FocusLost:Connect(function()
 	end
 end)
 
+-- FOV Radius
+createLabel("FOV Radius:", 145)
+local FOVBox = createBox(tostring(fovRadius), 165)
 FOVBox.FocusLost:Connect(function()
 	local val = tonumber(FOVBox.Text)
 	if val then
@@ -177,43 +143,65 @@ FOVBox.FocusLost:Connect(function()
 	end
 end)
 
--- Highlight เป้าหมาย
+-- FOV Y Offset
+createLabel("FOV Y Offset:", 195)
+local YOffsetBox = createBox(tostring(fovYOffset), 215)
+YOffsetBox.FocusLost:Connect(function()
+	local val = tonumber(YOffsetBox.Text)
+	if val then
+		fovYOffset = math.clamp(val, -Camera.ViewportSize.Y/2, Camera.ViewportSize.Y/2)
+	end
+end)
+
+-- Max Distance
+createLabel("Max Distance:", 245)
+local DistanceBox = createBox(tostring(maxDistance), 265)
+DistanceBox.FocusLost:Connect(function()
+	local val = tonumber(DistanceBox.Text)
+	if val then
+		maxDistance = math.clamp(val, 10, 1000)
+	end
+end)
+
+-- Show/Hide Menu (เปิดปิด GUI)
+menuToggle.MouseButton1Click:Connect(function()
+	MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- Highlight
 local function createHighlight(targetModel)
 	if highlightBox then highlightBox:Destroy() end
 	local box = Instance.new("Highlight")
-	box.FillColor = Color3.fromRGB(255, 255, 255)
-	box.FillTransparency = 0.7
+	box.FillColor = Color3.fromRGB(255, 100, 100)
+	box.FillTransparency = 0.6
 	box.OutlineTransparency = 1
 	box.Adornee = targetModel
 	box.Parent = game.CoreGui
 	highlightBox = box
 end
 
--- หาเป้าใกล้สุด
+-- Closest Target
 local function getClosestTarget()
 	local closest, shortestDistance = nil, math.huge
-
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(aimPart) then
 			local part = player.Character[aimPart]
 			local pos, visible = Camera:WorldToViewportPoint(part.Position)
 			local screenPos = Vector2.new(pos.X, pos.Y)
 			local dist = (screenPos - (Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset))).Magnitude
-
-			if visible and dist < shortestDistance and (not fovEnabled or dist <= fovRadius) then
+			local distanceFromCamera = (Camera.CFrame.Position - part.Position).Magnitude
+			if visible and dist < shortestDistance and distanceFromCamera <= maxDistance and (not fovEnabled or dist <= fovRadius) then
 				shortestDistance = dist
 				closest = player
 			end
 		end
 	end
-
 	return closest
 end
 
--- Aimbot ทำงาน
+-- Aimbot Logic
 RunService.RenderStepped:Connect(function()
 	fovCircle.Position = Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset)
-
 	if aimbotEnabled then
 		local targetPlayer = getClosestTarget()
 		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild(aimPart) then
@@ -222,7 +210,6 @@ RunService.RenderStepped:Connect(function()
 			local origin = Camera.CFrame.Position
 			local direction = (prediction - origin).Unit
 			local newCFrame = CFrame.new(origin, origin + direction)
-
 			Camera.CFrame = Camera.CFrame:Lerp(newCFrame, smoothness)
 			createHighlight(targetPlayer.Character)
 			currentTarget = targetPlayer
@@ -236,7 +223,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- ฟื้น UI เมื่อ respawn
+-- Re-parent GUI on respawn
 LocalPlayer.CharacterAdded:Connect(function()
 	task.wait(1)
 	gui.Parent = game.CoreGui
