@@ -8,8 +8,8 @@ local Mouse = LocalPlayer:GetMouse()
 -- CONFIG
 local aimbotEnabled = false
 local fovEnabled = true
-local smoothness = 0.2
-local fovRadius = 100
+local smoothness = 3
+local fovRadius = 50
 local aimPart = "Head"
 local maxDistance = 100
 local fovYOffset = 0
