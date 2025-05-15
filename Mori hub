@@ -46,7 +46,7 @@ menuToggle.Draggable = true
 
 -- Lock Target Button
 local lockToggle = Instance.new("TextButton")
-lockToggle.Size = UDim2.new(0, 800, 0, 0)
+lockToggle.Size = UDim2.new(0, 800, 0, 10)
 lockToggle.Position = UDim2.new(0, 20, 0, 90)
 lockToggle.BackgroundTransparency = 1
 lockToggle.Text = "🔒"
