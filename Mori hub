@@ -8,10 +8,10 @@ local Mouse = LocalPlayer:GetMouse()
 -- CONFIG
 local aimbotEnabled = false
 local fovEnabled = true
-local smoothness = 0.5
-local fovRadius = 50
+local smoothness = 2.5
+local fovRadius = 40
 local aimPart = "Head"
-local maxDistance = 100
+local maxDistance = 120
 local fovYOffset = 0
 local currentTarget = nil
 
@@ -28,7 +28,7 @@ fovCircle.Visible = fovEnabled
 
 -- GUI Setup
 local gui = Instance.new("ScreenGui")
-gui.Name = "🎯MORI HUB AIMBOT"
+gui.Name = "🎯MORI HUB AIMBOT v1.0"
 gui.ResetOnSpawn = false
 gui.Parent = game.CoreGui
 
