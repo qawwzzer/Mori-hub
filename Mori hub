@@ -20,7 +20,7 @@ local lockedTarget = nil
 
 -- FOV Drawing
 local fovCircle = Drawing.new("Circle")
-fovCircle.Color = Color3.fromRGB(255, 255, 255) -- สีขาว
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
 fovCircle.Thickness = 2
 fovCircle.Filled = false
 fovCircle.Radius = fovRadius
@@ -32,7 +32,7 @@ gui.Name = "🎯MORI HUB AIMBOT"
 gui.ResetOnSpawn = false
 gui.Parent = game.CoreGui
 
--- MENU Button (สีเหลี่ยมจัตุรัส)
+-- Menu Toggle
 local menuToggle = Instance.new("TextButton")
 menuToggle.Size = UDim2.new(0, 35, 0, 35)
 menuToggle.Position = UDim2.new(0, 20, 0, 50)
@@ -44,12 +44,12 @@ menuToggle.TextSize = 16
 menuToggle.Parent = gui
 menuToggle.Draggable = true
 
--- Lock Target Button (กุญแจ) แยกจากเมนู
+-- Lock Target Button
 local lockToggle = Instance.new("TextButton")
-lockToggle.Size = UDim2.new(0, 800, 0, 50)
+lockToggle.Size = UDim2.new(0, 800, 0, 0)
 lockToggle.Position = UDim2.new(0, 20, 0, 90)
 lockToggle.BackgroundTransparency = 1
-lockToggle.Text = "🔒" -- เริ่มต้นล็อกปิด
+lockToggle.Text = "🔒"
 lockToggle.TextColor3 = Color3.fromRGB(0, 0, 0)
 lockToggle.Font = Enum.Font.Gotham
 lockToggle.TextSize = 48
@@ -58,28 +58,29 @@ lockToggle.Draggable = true
 
 lockToggle.MouseButton1Click:Connect(function()
 	if lockTarget then
-		-- ปลดล็อกเป้า
 		lockTarget = false
 		lockedTarget = nil
 		lockToggle.Text = "🔒"
 	else
-		-- หาเป้าใกล้ที่สุด ณ ตอนนี้ แล้วล็อกค้าง
 		local target = nil
 		local shortestDistance = math.huge
 		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(aimPart) then
-				local part = player.Character[aimPart]
-				local pos, visible = Camera:WorldToViewportPoint(part.Position)
-				local screenPos = Vector2.new(pos.X, pos.Y)
-				local dist = (screenPos - (Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset))).Magnitude
-				local distanceFromCamera = (Camera.CFrame.Position - part.Position).Magnitude
-				if visible and dist < shortestDistance and distanceFromCamera <= maxDistance and (not fovEnabled or dist <= fovRadius) then
-					shortestDistance = dist
-					target = player
+			if player ~= LocalPlayer and player.Character then
+				local char = player.Character
+				local part = char:FindFirstChild(aimPart)
+				local humanoid = char:FindFirstChild("Humanoid")
+				if part and humanoid and humanoid.Health > 0 then
+					local pos, visible = Camera:WorldToViewportPoint(part.Position)
+					local screenPos = Vector2.new(pos.X, pos.Y)
+					local dist = (screenPos - (Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset))).Magnitude
+					local distanceFromCamera = (Camera.CFrame.Position - part.Position).Magnitude
+					if visible and dist < shortestDistance and distanceFromCamera <= maxDistance and (not fovEnabled or dist <= fovRadius) then
+						shortestDistance = dist
+						target = player
+					end
 				end
 			end
 		end
-
 		if target then
 			lockTarget = true
 			lockedTarget = target
@@ -103,7 +104,7 @@ MainFrame.Parent = gui
 local UICorner = Instance.new("UICorner", MainFrame)
 UICorner.CornerRadius = UDim.new(0, 6)
 
--- Helper function to create labeled elements
+-- UI Helper
 local function createLabel(text, positionY)
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, -20, 0, 20)
@@ -151,14 +152,14 @@ Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.TextSize = 16
 
--- Aimbot
+-- Aimbot Toggle
 local AimbotToggle = createButton("Aimbot: OFF", 35)
 AimbotToggle.MouseButton1Click:Connect(function()
 	aimbotEnabled = not aimbotEnabled
 	AimbotToggle.Text = "Aimbot: " .. (aimbotEnabled and "ON" or "OFF")
 end)
 
--- FOV
+-- FOV Toggle
 local FOVToggle = createButton("FOV: ON", 65)
 FOVToggle.MouseButton1Click:Connect(function()
 	fovEnabled = not fovEnabled
@@ -166,17 +167,14 @@ FOVToggle.MouseButton1Click:Connect(function()
 	fovCircle.Visible = fovEnabled
 end)
 
--- Smoothness
+-- Config Boxes
 createLabel("Smoothness:", 95)
 local SmoothBox = createBox(tostring(smoothness), 115)
 SmoothBox.FocusLost:Connect(function()
 	local val = tonumber(SmoothBox.Text)
-	if val then
-		smoothness = math.clamp(val, 0.1, 1)
-	end
+	if val then smoothness = math.clamp(val, 0.1, 1) end
 end)
 
--- FOV Radius
 createLabel("FOV Radius:", 145)
 local FOVBox = createBox(tostring(fovRadius), 165)
 FOVBox.FocusLost:Connect(function()
@@ -187,7 +185,6 @@ FOVBox.FocusLost:Connect(function()
 	end
 end)
 
--- FOV Y Offset
 createLabel("FOV Y Offset:", 195)
 local YOffsetBox = createBox(tostring(fovYOffset), 215)
 YOffsetBox.FocusLost:Connect(function()
@@ -197,14 +194,11 @@ YOffsetBox.FocusLost:Connect(function()
 	end
 end)
 
--- Max Distance
 createLabel("Max Distance:", 245)
 local DistanceBox = createBox(tostring(maxDistance), 265)
 DistanceBox.FocusLost:Connect(function()
 	local val = tonumber(DistanceBox.Text)
-	if val then
-		maxDistance = math.clamp(val, 10, 1000)
-	end
+	if val then maxDistance = math.clamp(val, 10, 1000) end
 end)
 
 -- Show/Hide Menu
@@ -225,10 +219,11 @@ local function createHighlight(targetModel)
 	highlightBox = box
 end
 
--- Function to get target player
+-- Target Finder
 local function getTarget()
 	if lockTarget and lockedTarget then
-		if lockedTarget.Character and lockedTarget.Character:FindFirstChild(aimPart) then
+		local char = lockedTarget.Character
+		if char and char:FindFirstChild(aimPart) and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
 			return lockedTarget
 		else
 			return nil
@@ -237,22 +232,26 @@ local function getTarget()
 
 	local closest, shortestDistance = nil, math.huge
 	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(aimPart) then
-			local part = player.Character[aimPart]
-			local pos, visible = Camera:WorldToViewportPoint(part.Position)
-			local screenPos = Vector2.new(pos.X, pos.Y)
-			local dist = (screenPos - (Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset))).Magnitude
-			local distanceFromCamera = (Camera.CFrame.Position - part.Position).Magnitude
-			if visible and dist < shortestDistance and distanceFromCamera <= maxDistance and (not fovEnabled or dist <= fovRadius) then
-				shortestDistance = dist
-				closest = player
+		if player ~= LocalPlayer and player.Character then
+			local char = player.Character
+			local part = char:FindFirstChild(aimPart)
+			local humanoid = char:FindFirstChild("Humanoid")
+			if part and humanoid and humanoid.Health > 0 then
+				local pos, visible = Camera:WorldToViewportPoint(part.Position)
+				local screenPos = Vector2.new(pos.X, pos.Y)
+				local dist = (screenPos - (Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset))).Magnitude
+				local distanceFromCamera = (Camera.CFrame.Position - part.Position).Magnitude
+				if visible and dist < shortestDistance and distanceFromCamera <= maxDistance and (not fovEnabled or dist <= fovRadius) then
+					shortestDistance = dist
+					closest = player
+				end
 			end
 		end
 	end
 	return closest
 end
 
--- Aimbot Logic
+-- Main Logic
 RunService.RenderStepped:Connect(function()
 	fovCircle.Position = Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset)
 	if aimbotEnabled then
@@ -276,7 +275,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- Re-parent GUI on respawn
+-- GUI Restore on Respawn
 LocalPlayer.CharacterAdded:Connect(function()
 	task.wait(1)
 	gui.Parent = game.CoreGui
