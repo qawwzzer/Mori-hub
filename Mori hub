@@ -49,7 +49,7 @@ local lockToggle = Instance.new("TextButton")
 lockToggle.Size = UDim2.new(0, 600, 0, 50)
 lockToggle.Position = UDim2.new(0, 20, 0, 90)
 lockToggle.BackgroundTransparency = 1
-lockToggle.Text = "🔒"
+lockToggle.Text = ""
 lockToggle.TextColor3 = Color3.fromRGB(0, 0, 0)
 lockToggle.Font = Enum.Font.Gotham
 lockToggle.TextSize = 48
@@ -60,7 +60,7 @@ lockToggle.MouseButton1Click:Connect(function()
 	if lockTarget then
 		lockTarget = false
 		lockedTarget = nil
-		lockToggle.Text = "🔒"
+		lockToggle.Text = ""
 	else
 		local target = nil
 		local shortestDistance = math.huge
@@ -84,7 +84,7 @@ lockToggle.MouseButton1Click:Connect(function()
 		if target then
 			lockTarget = true
 			lockedTarget = target
-			lockToggle.Text = "🔓"
+			lockToggle.Text = ""
 		end
 	end
 end)
