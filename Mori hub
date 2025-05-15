@@ -46,7 +46,7 @@ menuToggle.Draggable = true
 
 -- Lock Target Button (กุญแจ) แยกจากเมนู
 local lockToggle = Instance.new("TextButton")
-lockToggle.Size = UDim2.new(0, 300, 0, 300)
+lockToggle.Size = UDim2.new(0, 300, 0, 50)
 lockToggle.Position = UDim2.new(0, 20, 0, 90)
 lockToggle.BackgroundTransparency = 1
 lockToggle.Text = "🔒" -- เริ่มต้นล็อกปิด
