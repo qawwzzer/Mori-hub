@@ -8,17 +8,19 @@ local Mouse = LocalPlayer:GetMouse()
 -- CONFIG
 local aimbotEnabled = false
 local fovEnabled = true
-local smoothness = 3
+local smoothness = 0.5
 local fovRadius = 50
 local aimPart = "Head"
 local maxDistance = 100
 local fovYOffset = 0
 local currentTarget = nil
-local highlightBox = nil
+
+local lockTarget = false
+local lockedTarget = nil
 
 -- FOV Drawing
 local fovCircle = Drawing.new("Circle")
-fovCircle.Color = Color3.fromRGB(0, 255, 255)
+fovCircle.Color = Color3.fromRGB(255, 255, 255) -- สีขาว
 fovCircle.Thickness = 2
 fovCircle.Filled = false
 fovCircle.Radius = fovRadius
@@ -32,17 +34,59 @@ gui.Parent = game.CoreGui
 
 -- MENU Button (สีเหลี่ยมจัตุรัส)
 local menuToggle = Instance.new("TextButton")
-menuToggle.Size = UDim2.new(0, 35, 0, 35)  -- ขนาดปุ่ม 35x35 (เล็กลง)
-menuToggle.Position = UDim2.new(0, 20, 0, 50)  -- ตำแหน่งของปุ่ม
-menuToggle.BackgroundColor3 = Color3.fromRGB(0, 255, 255)  -- สีของปุ่ม
-menuToggle.Text = "Menu"  -- เปลี่ยนข้อความเป็น "Menu"
-menuToggle.TextColor3 = Color3.fromRGB(0, 0, 0)  -- สีข้อความในปุ่ม
+menuToggle.Size = UDim2.new(0, 35, 0, 35)
+menuToggle.Position = UDim2.new(0, 20, 0, 50)
+menuToggle.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+menuToggle.Text = "Menu"
+menuToggle.TextColor3 = Color3.fromRGB(0, 0, 0)
 menuToggle.Font = Enum.Font.Gotham
 menuToggle.TextSize = 16
 menuToggle.Parent = gui
-
--- ทำให้ปุ่มสามารถลากได้
 menuToggle.Draggable = true
+
+-- Lock Target Button (กุญแจ) แยกจากเมนู
+local lockToggle = Instance.new("TextButton")
+lockToggle.Size = UDim2.new(0, 300, 0, 300)
+lockToggle.Position = UDim2.new(0, 20, 0, 90)
+lockToggle.BackgroundTransparency = 1
+lockToggle.Text = "🔒" -- เริ่มต้นล็อกปิด
+lockToggle.TextColor3 = Color3.fromRGB(0, 0, 0)
+lockToggle.Font = Enum.Font.Gotham
+lockToggle.TextSize = 48
+lockToggle.Parent = gui
+lockToggle.Draggable = true
+
+lockToggle.MouseButton1Click:Connect(function()
+	if lockTarget then
+		-- ปลดล็อกเป้า
+		lockTarget = false
+		lockedTarget = nil
+		lockToggle.Text = "🔒"
+	else
+		-- หาเป้าใกล้ที่สุด ณ ตอนนี้ แล้วล็อกค้าง
+		local target = nil
+		local shortestDistance = math.huge
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(aimPart) then
+				local part = player.Character[aimPart]
+				local pos, visible = Camera:WorldToViewportPoint(part.Position)
+				local screenPos = Vector2.new(pos.X, pos.Y)
+				local dist = (screenPos - (Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset))).Magnitude
+				local distanceFromCamera = (Camera.CFrame.Position - part.Position).Magnitude
+				if visible and dist < shortestDistance and distanceFromCamera <= maxDistance and (not fovEnabled or dist <= fovRadius) then
+					shortestDistance = dist
+					target = player
+				end
+			end
+		end
+
+		if target then
+			lockTarget = true
+			lockedTarget = target
+			lockToggle.Text = "🔓"
+		end
+	end
+end)
 
 -- Main Frame
 local MainFrame = Instance.new("Frame")
@@ -128,7 +172,7 @@ local SmoothBox = createBox(tostring(smoothness), 115)
 SmoothBox.FocusLost:Connect(function()
 	local val = tonumber(SmoothBox.Text)
 	if val then
-		smoothness = math.clamp(val, 0, 1)
+		smoothness = math.clamp(val, 0.1, 1)
 	end
 end)
 
@@ -163,12 +207,13 @@ DistanceBox.FocusLost:Connect(function()
 	end
 end)
 
--- Show/Hide Menu (เปิดปิด GUI)
+-- Show/Hide Menu
 menuToggle.MouseButton1Click:Connect(function()
 	MainFrame.Visible = not MainFrame.Visible
 end)
 
 -- Highlight
+local highlightBox = nil
 local function createHighlight(targetModel)
 	if highlightBox then highlightBox:Destroy() end
 	local box = Instance.new("Highlight")
@@ -180,8 +225,16 @@ local function createHighlight(targetModel)
 	highlightBox = box
 end
 
--- Closest Target
-local function getClosestTarget()
+-- Function to get target player
+local function getTarget()
+	if lockTarget and lockedTarget then
+		if lockedTarget.Character and lockedTarget.Character:FindFirstChild(aimPart) then
+			return lockedTarget
+		else
+			return nil
+		end
+	end
+
 	local closest, shortestDistance = nil, math.huge
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(aimPart) then
@@ -203,7 +256,7 @@ end
 RunService.RenderStepped:Connect(function()
 	fovCircle.Position = Camera.ViewportSize / 2 + Vector2.new(0, fovYOffset)
 	if aimbotEnabled then
-		local targetPlayer = getClosestTarget()
+		local targetPlayer = getTarget()
 		if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild(aimPart) then
 			local part = targetPlayer.Character[aimPart]
 			local prediction = part.Position + part.Velocity * 0.07
