@@ -168,7 +168,7 @@ FOVToggle.MouseButton1Click:Connect(function()
 end)
 
 -- Config Boxes
-createLabel("Smoothness:", 95)
+createLabel("ความลื่นไหลในการล็อก:", 95)
 local SmoothBox = createBox(tostring(smoothness), 115)
 SmoothBox.FocusLost:Connect(function()
 	local val = tonumber(SmoothBox.Text)
@@ -194,7 +194,7 @@ YOffsetBox.FocusLost:Connect(function()
 	end
 end)
 
-createLabel("Max Distance:", 245)
+createLabel("ระยะการล็อกเป้าหมาย:", 245)
 local DistanceBox = createBox(tostring(maxDistance), 265)
 DistanceBox.FocusLost:Connect(function()
 	local val = tonumber(DistanceBox.Text)
