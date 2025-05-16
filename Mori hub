@@ -147,7 +147,7 @@ local function createButton(text, positionY)
 end
 
 -- Title
-local Title = createLabel("🎯MORI HUB AIMBOT", 0)
+local Title = createLabel("🎯MORI HUB AIMBOT v1.0", 0)
 Title.TextXAlignment = Enum.TextXAlignment.Center
 Title.Size = UDim2.new(1, 0, 0, 30)
 Title.TextSize = 16
