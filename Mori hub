@@ -8,7 +8,7 @@ local Mouse = LocalPlayer:GetMouse()
 -- CONFIG
 local aimbotEnabled = false
 local fovEnabled = true
-local smoothness = 2.5
+local smoothness = 2
 local fovRadius = 40
 local aimPart = "Head"
 local maxDistance = 120
@@ -175,7 +175,7 @@ SmoothBox.FocusLost:Connect(function()
 	if val then smoothness = math.clamp(val, 0.1, 1) end
 end)
 
-createLabel("FOV Radius:", 145)
+createLabel("ขนาดของ FOV:", 145)
 local FOVBox = createBox(tostring(fovRadius), 165)
 FOVBox.FocusLost:Connect(function()
 	local val = tonumber(FOVBox.Text)
@@ -185,7 +185,7 @@ FOVBox.FocusLost:Connect(function()
 	end
 end)
 
-createLabel("FOV Y Offset:", 195)
+createLabel("ปรับขึ้นลง FOV กลางจอ:", 195)
 local YOffsetBox = createBox(tostring(fovYOffset), 215)
 YOffsetBox.FocusLost:Connect(function()
 	local val = tonumber(YOffsetBox.Text)
