@@ -1,0 +1,155 @@
+--[[ 
+  วางใน StarterPlayerScripts
+  ฟีเจอร์:
+  - ปรับภาพให้กากที่สุด (Ultra Low Graphics Boost)
+  - แสดงเวลานับถอยหลัง 20 นาทีบนหน้าจอ
+  - Kick ผู้เล่นเมื่อครบ 20 นาที
+--]]
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
+local StarterGui = game:GetService("StarterGui")
+local player = Players.LocalPlayer
+
+local countdownTime = 20 * 60 -- 20 นาที = 1200 วินาที
+
+-----------------------
+-- ฟังก์ชัน Boost FPS แบบ Ultra Low Graphics
+local function ultraLowGraphicsBoost()
+    -- ปรับ Quality Level ต่ำสุด
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+    -- ปิด Post Effects
+    for _, v in ipairs(Lighting:GetChildren()) do
+        if v:IsA("PostEffect") then
+            v.Enabled = false
+        end
+    end
+
+    -- ปิด Sky, Shadow, Fog, ปรับ Ambient เป็นเทา
+    if Lighting:FindFirstChildOfClass("Sky") then
+        Lighting:FindFirstChildOfClass("Sky"):Destroy()
+    end
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 1000000
+    Lighting.Brightness = 0
+    Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+    Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+
+    -- ปรับ Terrain (ถ้ามี)
+    if Terrain then
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 1
+    end
+
+    -- ปิด Particle, Trail, Smoke, Fire และลบ Decal, Texture
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
+            obj.Enabled = false
+        elseif obj:IsA("Decal") then
+            obj.Transparency = 1
+        elseif obj:IsA("Texture") then
+            obj:Destroy()
+        elseif obj:IsA("ShirtGraphic") or obj:IsA("Shirt") or obj:IsA("Pants") then
+            obj:Destroy()
+        elseif obj:IsA("MeshPart") or obj:IsA("Part") then
+            obj.Material = Enum.Material.SmoothPlastic
+            obj.Reflectance = 0
+        elseif obj:IsA("Accessory") or obj:IsA("Hat") then
+            obj:Destroy()
+        elseif obj:IsA("Sound") then
+            obj.Volume = 0
+        end
+    end
+
+    -- ปิด GUI บางส่วน
+    local coreGuisToDisable = {
+        Enum.CoreGuiType.Backpack,
+        Enum.CoreGuiType.Chat,
+        Enum.CoreGuiType.EmotesMenu,
+        Enum.CoreGuiType.Health,
+        Enum.CoreGuiType.PlayerList
+    }
+    for _, gui in ipairs(coreGuisToDisable) do
+        StarterGui:SetCoreGuiEnabled(gui, false)
+    end
+end
+
+-- ซ่อน Accessories, เปลี่ยน Material ตัวละครเป็น SmoothPlastic
+local function onCharacterAdded(char)
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("Accessory") or part:IsA("Hat") then
+            part:Destroy()
+        elseif part:IsA("Decal") or part:IsA("Texture") then
+            part:Destroy()
+        elseif part:IsA("MeshPart") or part:IsA("Part") then
+            part.Material = Enum.Material.SmoothPlastic
+            part.Reflectance = 0
+        end
+    end
+end
+
+-- เรียกใช้งานเมื่อ Player เข้ามาใหม่
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(onCharacterAdded)
+end)
+-- กรณีผู้เล่นอยู่แล้วตอนสคริปต์โหลด
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+
+-----------------------
+-- ฟังก์ชันสร้าง GUI นับถอยหลัง
+local function createCountdownGui()
+    local gui = player:WaitForChild("PlayerGui")
+    if gui:FindFirstChild("MyCountdownTimer") then
+        return gui.MyCountdownTimer.TimerLabel
+    end
+
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "MyCountdownTimer"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = gui
+
+    local timerLabel = Instance.new("TextLabel")
+    timerLabel.Name = "TimerLabel"
+    timerLabel.Size = UDim2.new(0, 200, 0, 40)
+    timerLabel.Position = UDim2.new(0.5, -100, 0, 10)
+    timerLabel.BackgroundTransparency = 0.3
+    timerLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+    timerLabel.BorderSizePixel = 0
+    timerLabel.TextColor3 = Color3.new(1, 1, 1)
+    timerLabel.Font = Enum.Font.SourceSansBold
+    timerLabel.TextSize = 24
+    timerLabel.Text = "เวลาคงเหลือ: 20:00"
+    timerLabel.Parent = screenGui
+
+    return timerLabel
+end
+
+-----------------------
+-- เริ่มทำงาน
+
+ultraLowGraphicsBoost() -- ปรับภาพกากสุด
+
+local timeLeft = countdownTime
+local timerLabel = createCountdownGui()
+
+task.spawn(function()
+    while timeLeft >= 0 do
+        local minutes = math.floor(timeLeft / 60)
+        local seconds = timeLeft % 60
+        timerLabel.Text = string.format("เวลาคงเหลือ: %02d:%02d", minutes, seconds)
+
+        if timeLeft <= 0 then
+            player:Kick("ครบ 20 นาทีแล้ว")
+            break
+        end
+
+        timeLeft -= 1
+        task.wait(1)
+    end
+end)
