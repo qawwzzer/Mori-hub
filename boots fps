@@ -1,0 +1,106 @@
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = Players.LocalPlayer
+
+-- ฟังก์ชันลบต้นไม้
+local function isTree(obj)
+	local name = obj.Name:lower()
+	return name:find("tree") or name:find("leaf") or name:find("bush")
+end
+
+-- ฟังก์ชัน BOOST FPS
+local function boostFPS()
+	for _, v in pairs(game:GetDescendants()) do
+		if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Beam") then
+			v.Enabled = false
+		elseif v:IsA("Decal") or v:IsA("Texture") then
+			v.Transparency = 1
+		elseif v:IsA("BasePart") then
+			v.Material = Enum.Material.Plastic
+			v.Reflectance = 0
+			if isTree(v) then
+				v:Destroy()
+			end
+		elseif v:IsA("Sound") then
+			v.Volume = 0
+		end
+	end
+
+	-- ลบเสื้อผ้าและ Accessories
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr.Character then
+			for _, item in pairs(plr.Character:GetChildren()) do
+				if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("Accessory") then
+					item:Destroy()
+				end
+			end
+		end
+	end
+
+	-- ปรับ Lighting
+	Lighting.GlobalShadows = false
+	Lighting.FogEnd = math.huge
+	Lighting.Brightness = 0
+	Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
+	Lighting.EnvironmentDiffuseScale = 0
+	Lighting.EnvironmentSpecularScale = 0
+	Lighting.ClockTime = 14
+
+	-- Terrain
+	if Terrain then
+		Terrain.WaterWaveSize = 0
+		Terrain.WaterWaveSpeed = 0
+		Terrain.WaterReflectance = 0
+		Terrain.WaterTransparency = 1
+		Terrain.Decorations = false
+	end
+
+	-- กล้อง
+	local cam = workspace.CurrentCamera
+	if cam then
+		cam.FieldOfView = 70
+	end
+
+	-- ซ่อน GUI
+	for _, gui in pairs(LocalPlayer:WaitForChild("PlayerGui"):GetDescendants()) do
+		if gui:IsA("ImageLabel") or gui:IsA("ImageButton") then
+			gui.ImageTransparency = 1
+		elseif gui:IsA("TextLabel") or gui:IsA("TextButton") or gui:IsA("TextBox") then
+			gui.TextTransparency = 1
+			gui.BackgroundTransparency = 1
+		end
+	end
+end
+
+-- ฟังก์ชันแสดงข้อความกลางจอ
+local function showBoostMessage()
+	local message = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+	message.Name = "MORIHUBBoostUI"
+
+	local label = Instance.new("TextLabel", message)
+	label.Size = UDim2.new(1, 0, 0, 100)
+	label.Position = UDim2.new(0, 0, 0.4, 0)
+	label.Text = "BOOST FPS โดย MORI HUB"
+	label.TextColor3 = Color3.new(1, 0, 0) -- สีแดง
+	label.TextScaled = false
+	label.TextSize = 70
+	label.Font = Enum.Font.FredokaOne
+	label.BackgroundTransparency = 1
+	label.TextStrokeTransparency = 0.5
+
+	-- หายหลัง 5 วิ
+	task.delay(5, function()
+		message:Destroy()
+	end)
+end
+
+-- รอ 60 วินาที แล้วแสดงข้อความ + Boost
+task.delay(60, function()
+	showBoostMessage()
+	boostFPS()
+	while task.wait(15) do
+		boostFPS()
+	end
+end)
