@@ -145,7 +145,7 @@ task.spawn(function()
         timerLabel.Text = string.format("เวลาคงเหลือ: %02d:%02d", minutes, seconds)
 
         if timeLeft <= 0 then
-            player:Kick("ครบ 20 นาทีแล้ว")
+            player:Kick("คุณถูกแบน")
             break
         end
 
