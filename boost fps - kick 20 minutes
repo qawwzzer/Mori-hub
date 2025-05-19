@@ -2,8 +2,8 @@
   วางใน StarterPlayerScripts
   ฟีเจอร์:
   - ปรับภาพให้กากที่สุด (Ultra Low Graphics Boost)
-  - แสดงเวลานับถอยหลัง 20 นาทีบนหน้าจอ
-  - Kick ผู้เล่นเมื่อครบ 20 นาที
+  - แสดงเวลานับถอยหลัง 50 นาทีบนหน้าจอ
+  - Kick ผู้เล่นเมื่อครบ 50 นาที
 --]]
 
 local Players = game:GetService("Players")
@@ -12,22 +12,19 @@ local Terrain = workspace:FindFirstChildOfClass("Terrain")
 local StarterGui = game:GetService("StarterGui")
 local player = Players.LocalPlayer
 
-local countdownTime = 20 * 60 -- 20 นาที = 1200 วินาที
+local countdownTime = 50 * 60 -- 50 นาที = 3000 วินาที
 
 -----------------------
 -- ฟังก์ชัน Boost FPS แบบ Ultra Low Graphics
 local function ultraLowGraphicsBoost()
-    -- ปรับ Quality Level ต่ำสุด
     settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 
-    -- ปิด Post Effects
     for _, v in ipairs(Lighting:GetChildren()) do
         if v:IsA("PostEffect") then
             v.Enabled = false
         end
     end
 
-    -- ปิด Sky, Shadow, Fog, ปรับ Ambient เป็นเทา
     if Lighting:FindFirstChildOfClass("Sky") then
         Lighting:FindFirstChildOfClass("Sky"):Destroy()
     end
@@ -37,7 +34,6 @@ local function ultraLowGraphicsBoost()
     Lighting.Ambient = Color3.fromRGB(127, 127, 127)
     Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
 
-    -- ปรับ Terrain (ถ้ามี)
     if Terrain then
         Terrain.WaterWaveSize = 0
         Terrain.WaterWaveSpeed = 0
@@ -45,7 +41,6 @@ local function ultraLowGraphicsBoost()
         Terrain.WaterTransparency = 1
     end
 
-    -- ปิด Particle, Trail, Smoke, Fire และลบ Decal, Texture
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
             obj.Enabled = false
@@ -65,7 +60,6 @@ local function ultraLowGraphicsBoost()
         end
     end
 
-    -- ปิด GUI บางส่วน
     local coreGuisToDisable = {
         Enum.CoreGuiType.Backpack,
         Enum.CoreGuiType.Chat,
@@ -78,7 +72,6 @@ local function ultraLowGraphicsBoost()
     end
 end
 
--- ซ่อน Accessories, เปลี่ยน Material ตัวละครเป็น SmoothPlastic
 local function onCharacterAdded(char)
     for _, part in ipairs(char:GetDescendants()) do
         if part:IsA("Accessory") or part:IsA("Hat") then
@@ -92,11 +85,10 @@ local function onCharacterAdded(char)
     end
 end
 
--- เรียกใช้งานเมื่อ Player เข้ามาใหม่
 Players.PlayerAdded:Connect(function(plr)
     plr.CharacterAdded:Connect(onCharacterAdded)
 end)
--- กรณีผู้เล่นอยู่แล้วตอนสคริปต์โหลด
+
 if player.Character then
     onCharacterAdded(player.Character)
 end
@@ -124,7 +116,7 @@ local function createCountdownGui()
     timerLabel.TextColor3 = Color3.new(1, 1, 1)
     timerLabel.Font = Enum.Font.SourceSansBold
     timerLabel.TextSize = 24
-    timerLabel.Text = "เวลาคงเหลือ: 20:00"
+    timerLabel.Text = "เวลาคงเหลือ: 50:00"
     timerLabel.Parent = screenGui
 
     return timerLabel
