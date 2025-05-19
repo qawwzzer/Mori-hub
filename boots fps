@@ -1,13 +1,50 @@
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local Terrain = workspace:FindFirstChildOfClass("Terrain")
-local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 
 -- ฟังก์ชันลบต้นไม้
 local function isTree(obj)
 	local name = obj.Name:lower()
 	return name:find("tree") or name:find("leaf") or name:find("bush")
+end
+
+-- ลบเสื้อผ้าจากตัวละคร
+local function removeClothing(character)
+	for _, item in pairs(character:GetChildren()) do
+		if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("Accessory") then
+			item:Destroy()
+		end
+	end
+end
+
+-- ฟังก์ชันติด Highlight ให้ตัวละคร (ยกเว้นตัวเอง)
+local function applyHighlight(character, player)
+	if player ~= LocalPlayer and character and not character:FindFirstChild("MORIHUB_Highlight") then
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "MORIHUB_Highlight"
+		highlight.FillColor = Color3.fromRGB(255, 100, 100)
+		highlight.OutlineColor = Color3.new(0, 0, 0)
+		highlight.FillTransparency = 0.5
+		highlight.OutlineTransparency = 1
+		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop -- มองเห็นแม้ไกล
+		highlight.Adornee = character
+		highlight.Parent = character
+	end
+end
+
+-- ล้าง Highlight เก่าทั้งหมด (ยกเว้นของตัวเอง)
+local function refreshHighlights()
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character then
+			for _, v in pairs(plr.Character:GetChildren()) do
+				if v:IsA("Highlight") and v.Name == "MORIHUB_Highlight" then
+					v:Destroy()
+				end
+			end
+			applyHighlight(plr.Character, plr)
+		end
+	end
 end
 
 -- ฟังก์ชัน BOOST FPS
@@ -28,18 +65,15 @@ local function boostFPS()
 		end
 	end
 
-	-- ลบเสื้อผ้าและ Accessories
+	-- ลบเสื้อผ้าและติด Highlight
 	for _, plr in pairs(Players:GetPlayers()) do
 		if plr.Character then
-			for _, item in pairs(plr.Character:GetChildren()) do
-				if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("Accessory") then
-					item:Destroy()
-				end
-			end
+			removeClothing(plr.Character)
+			applyHighlight(plr.Character, plr)
 		end
 	end
 
-	-- ปรับ Lighting
+	-- ปรับ Lighting เพื่อไม่ให้มืด
 	Lighting.GlobalShadows = false
 	Lighting.FogEnd = math.huge
 	Lighting.Brightness = 0
@@ -47,6 +81,9 @@ local function boostFPS()
 	Lighting.EnvironmentDiffuseScale = 0
 	Lighting.EnvironmentSpecularScale = 0
 	Lighting.ClockTime = 14
+	Lighting.Changed:Connect(function()
+		Lighting.ClockTime = 14
+	end)
 
 	-- Terrain
 	if Terrain then
@@ -82,25 +119,51 @@ local function showBoostMessage()
 	local label = Instance.new("TextLabel", message)
 	label.Size = UDim2.new(1, 0, 0, 100)
 	label.Position = UDim2.new(0, 0, 0.4, 0)
-	label.Text = "BOOST FPS โดย MORI HUB"
-	label.TextColor3 = Color3.new(1, 0, 0) -- สีแดง
+	label.Text = "BOOST FPS MORI HUB"
+	label.TextColor3 = Color3.new(1, 0, 0)
 	label.TextScaled = false
-	label.TextSize = 70
+	label.TextSize = 50
 	label.Font = Enum.Font.FredokaOne
 	label.BackgroundTransparency = 1
 	label.TextStrokeTransparency = 0.5
 
-	-- หายหลัง 5 วิ
 	task.delay(5, function()
 		message:Destroy()
 	end)
 end
 
--- รอ 60 วินาที แล้วแสดงข้อความ + Boost
-task.delay(60, function()
+-- เชื่อมต่อ Event สำหรับผู้เล่นใหม่
+Players.PlayerAdded:Connect(function(plr)
+	plr.CharacterAdded:Connect(function(char)
+		removeClothing(char)
+		task.wait(1)
+		applyHighlight(char, plr)
+	end)
+end)
+
+-- ติด Highlight ให้ผู้เล่นที่อยู่ก่อนแล้ว
+for _, plr in pairs(Players:GetPlayers()) do
+	plr.CharacterAdded:Connect(function(char)
+		applyHighlight(char, plr)
+	end)
+	if plr.Character then
+		applyHighlight(plr.Character, plr)
+	end
+end
+
+-- เริ่ม Boost หลัง 50 วิ และเรียกซ้ำทุก 40 วิ
+task.delay(50, function()
 	showBoostMessage()
 	boostFPS()
-	while task.wait(15) do
+	while task.wait(40) do
 		boostFPS()
+	end
+end)
+
+-- รี Highlight ทุก ๆ 15 วิ
+task.spawn(function()
+	while true do
+		task.wait(10)
+		refreshHighlights()
 	end
 end)
