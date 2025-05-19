@@ -115,7 +115,7 @@ local function createCountdownGui()
     timerLabel.BorderSizePixel = 0 -- ไม่มีกรอบ
     timerLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- สีแดง
     timerLabel.Font = Enum.Font.SourceSansBold
-    timerLabel.TextSize = 24
+    timerLabel.TextSize = 70
     timerLabel.Text = "เวลาคงเหลือ: 50:00"
     timerLabel.Parent = screenGui
 
