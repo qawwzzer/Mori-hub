@@ -1,0 +1,170 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local defaultJumpPower = 20 -- เริ่มต้นปิดกระโดดสูง
+local highJumpPower = 70
+local maxJumpPower = 100
+
+local highJumpEnabled = false
+
+local screenGui
+local mainFrame
+
+-- ฟังก์ชันตั้งค่า JumpPower
+local function setJumpPower(power)
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoid = character:WaitForChild("Humanoid")
+	humanoid.UseJumpPower = true
+	humanoid.JumpPower = math.clamp(power, 0, maxJumpPower)
+end
+
+local function createGui()
+	if playerGui:FindFirstChild("MORI HUB") then
+		screenGui = playerGui:FindFirstChild("MORI HUB")
+		mainFrame = screenGui:FindFirstChild("mainFrame")
+		return
+	end
+	
+	screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "MORI HUB"
+	screenGui.ResetOnSpawn = false
+	screenGui.Parent = playerGui
+
+	local toggleButton = Instance.new("ImageButton")
+	toggleButton.Name = "ToggleButton"
+	toggleButton.Size = UDim2.new(0, 40, 0, 40)
+	toggleButton.Position = UDim2.new(0, 10, 0.5, -20)
+	toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	toggleButton.BackgroundTransparency = 0.8
+	toggleButton.Image = ""
+	toggleButton.Parent = screenGui
+	toggleButton.Active = true
+	toggleButton.Draggable = true
+
+	local letterM = Instance.new("TextLabel")
+	letterM.Size = UDim2.new(1, 0, 1, 0)
+	letterM.BackgroundTransparency = 1
+	letterM.Text = "M"
+	letterM.TextColor3 = Color3.new(1, 1, 1)
+	letterM.Font = Enum.Font.GothamBold
+	letterM.TextScaled = true
+	letterM.Parent = toggleButton
+
+	mainFrame = Instance.new("Frame")
+	mainFrame.Name = "mainFrame"
+	mainFrame.Size = UDim2.new(0, 250, 0, 140)
+	mainFrame.Position = UDim2.new(0, 60, 0.5, -70)
+	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	mainFrame.BorderSizePixel = 0
+	mainFrame.Active = true
+	mainFrame.Draggable = true
+	mainFrame.Parent = screenGui
+	Instance.new("UICorner", mainFrame)
+
+	local layout = Instance.new("UIListLayout", mainFrame)
+	layout.Padding = UDim.new(0, 10)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Text = "MORI HUB - Jump Control"
+	titleLabel.Size = UDim2.new(1, -20, 0, 25)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.TextColor3 = Color3.new(1, 1, 1)
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.TextScaled = true
+	titleLabel.Parent = mainFrame
+
+	local toggleFrame = Instance.new("Frame")
+	toggleFrame.Size = UDim2.new(0, 60, 0, 25)
+	toggleFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+	toggleFrame.AnchorPoint = Vector2.new(0.5, 0)
+	toggleFrame.Position = UDim2.new(0.5, 0, 0, 0)
+	toggleFrame.Parent = mainFrame
+	Instance.new("UICorner", toggleFrame)
+
+	local toggleButtonSwitch = Instance.new("TextButton")
+	toggleButtonSwitch.Size = UDim2.new(0, 22, 0, 22)
+	toggleButtonSwitch.Position = UDim2.new(0, 2, 0, 1.5)
+	toggleButtonSwitch.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	toggleButtonSwitch.Text = ""
+	toggleButtonSwitch.AutoButtonColor = false
+	toggleButtonSwitch.Parent = toggleFrame
+	Instance.new("UICorner", toggleButtonSwitch)
+
+	local statusLabel = Instance.new("TextLabel")
+	statusLabel.Text = "ปิดกระโดดสูง"
+	statusLabel.Size = UDim2.new(1, -20, 0, 25)
+	statusLabel.BackgroundTransparency = 1
+	statusLabel.TextColor3 = Color3.new(1, 1, 1)
+	statusLabel.Font = Enum.Font.Gotham
+	statusLabel.TextScaled = true
+	statusLabel.Parent = mainFrame
+
+	local jumpInput = Instance.new("TextBox")
+	jumpInput.Text = tostring(highJumpPower)
+	jumpInput.PlaceholderText = "ใส่ค่ากระโดด..."
+	jumpInput.Size = UDim2.new(1, -20, 0, 30)
+	jumpInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	jumpInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+	jumpInput.Font = Enum.Font.Gotham
+	jumpInput.TextScaled = true
+	jumpInput.ClearTextOnFocus = false
+	jumpInput.Parent = mainFrame
+
+	local function updateToggleUI()
+		local goalPos = highJumpEnabled and UDim2.new(0, 36, 0, 1.5) or UDim2.new(0, 2, 0, 1.5)
+		local goalColor = highJumpEnabled and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(70, 70, 70)
+		local tweenPos = TweenService:Create(toggleButtonSwitch, TweenInfo.new(0.2), {Position = goalPos})
+		local tweenBG = TweenService:Create(toggleFrame, TweenInfo.new(0.2), {BackgroundColor3 = goalColor})
+		tweenPos:Play()
+		tweenBG:Play()
+		statusLabel.Text = highJumpEnabled and "เปิดกระโดดสูง" or "ปิดกระโดดสูง"
+	end
+
+	toggleButtonSwitch.MouseButton1Click:Connect(function()
+		highJumpEnabled = not highJumpEnabled
+		if highJumpEnabled then
+			setJumpPower(highJumpPower)
+		else
+			setJumpPower(defaultJumpPower)
+		end
+		updateToggleUI()
+	end)
+
+	jumpInput.FocusLost:Connect(function()
+		local num = tonumber(jumpInput.Text)
+		if num then
+			highJumpPower = math.clamp(num, 0, maxJumpPower)
+			jumpInput.Text = tostring(highJumpPower)
+			if highJumpEnabled then
+				setJumpPower(highJumpPower)
+			end
+		end
+	end)
+
+	local guiVisible = true
+	toggleButton.MouseButton1Click:Connect(function()
+		guiVisible = not guiVisible
+		mainFrame.Visible = guiVisible
+	end)
+
+	updateToggleUI()
+end
+
+createGui()
+
+-- ตั้ง JumpPower เริ่มต้นเป็น 20 (ปิด)
+setJumpPower(defaultJumpPower)
+
+player.CharacterAdded:Connect(function(char)
+	local humanoid = char:WaitForChild("Humanoid")
+	humanoid.UseJumpPower = true
+	wait(0.1)
+	if highJumpEnabled then
+		setJumpPower(highJumpPower)
+	else
+		setJumpPower(defaultJumpPower)
+	end
+end)
