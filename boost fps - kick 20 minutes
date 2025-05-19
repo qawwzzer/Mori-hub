@@ -3,7 +3,8 @@
   ฟีเจอร์:
   - แสดงเวลานับถอยหลัง 50 นาทีบนหน้าจอ
   - Kick ผู้เล่นเมื่อครบ 50 นาที
-  - หลังผ่านไป 1 นาที (60 วินาที) ค่อยปรับภาพให้กากสุด (Ultra Low Graphics Boost)
+  - หลังผ่านไป 1 นาที ค่อย Boost FPS อัตโนมัติ
+  - GUI แสดงเฉพาะตัวเลขสีแดง ไม่มีพื้นหลัง
 --]]
 
 local Players = game:GetService("Players")
@@ -110,10 +111,9 @@ local function createCountdownGui()
     timerLabel.Name = "TimerLabel"
     timerLabel.Size = UDim2.new(0, 200, 0, 40)
     timerLabel.Position = UDim2.new(0.5, -100, 0, 10)
-    timerLabel.BackgroundTransparency = 0.3
-    timerLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-    timerLabel.BorderSizePixel = 0
-    timerLabel.TextColor3 = Color3.new(1, 1, 1)
+    timerLabel.BackgroundTransparency = 1 -- โปร่งใส
+    timerLabel.BorderSizePixel = 0 -- ไม่มีกรอบ
+    timerLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- สีแดง
     timerLabel.Font = Enum.Font.SourceSansBold
     timerLabel.TextSize = 24
     timerLabel.Text = "เวลาคงเหลือ: 50:00"
@@ -134,7 +134,7 @@ task.spawn(function()
         local seconds = timeLeft % 60
         timerLabel.Text = string.format("เวลาคงเหลือ: %02d:%02d", minutes, seconds)
 
-        if timeLeft == countdownTime - 60 then -- หลังผ่านไป 60 วินาที (1 นาที)
+        if timeLeft == countdownTime - 60 then -- หลังผ่านไป 1 นาที
             ultraLowGraphicsBoost()
         end
 
