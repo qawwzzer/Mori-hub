@@ -1,163 +1,240 @@
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local defaultJumpPower = 20 -- เริ่มต้นปิดกระโดดสูง
+-- ค่าพื้นฐาน
+local defaultJumpPower = 20
 local highJumpPower = 70
 local maxJumpPower = 100
-
 local highJumpEnabled = false
 
-local screenGui
-local mainFrame
+local speedMultiplier = 0.15
+local speedEnabled = false
 
--- ฟังก์ชันตั้งค่า JumpPower
+-- สร้าง GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MORI_HUB"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 250, 0, 190)
+mainFrame.Position = UDim2.new(0, 20, 0, 100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+Instance.new("UICorner", mainFrame)
+
+-- Title
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -20, 0, 25)
+titleLabel.Position = UDim2.new(0, 10, 0, 10)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "MORI HUB Control Panel"
+titleLabel.TextColor3 = Color3.new(1,1,1)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextScaled = true
+titleLabel.Parent = mainFrame
+
+-- High Jump Section
+local jumpLabel = Instance.new("TextLabel")
+jumpLabel.Size = UDim2.new(0, 150, 0, 25)
+jumpLabel.Position = UDim2.new(0, 10, 0, 45)
+jumpLabel.BackgroundTransparency = 1
+jumpLabel.Text = "High Jump"
+jumpLabel.TextColor3 = Color3.new(1,1,1)
+jumpLabel.Font = Enum.Font.Gotham
+jumpLabel.TextScaled = true
+jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
+jumpLabel.Parent = mainFrame
+
+local jumpToggle = Instance.new("TextButton")
+jumpToggle.Size = UDim2.new(0, 50, 0, 25)
+jumpToggle.Position = UDim2.new(0, 170, 0, 45)
+jumpToggle.BackgroundColor3 = Color3.fromRGB(70,70,70)
+jumpToggle.TextColor3 = Color3.new(1,1,1)
+jumpToggle.Font = Enum.Font.GothamBold
+jumpToggle.TextScaled = true
+jumpToggle.Text = "OFF"
+jumpToggle.Parent = mainFrame
+
+local jumpInput = Instance.new("TextBox")
+jumpInput.Size = UDim2.new(0, 230, 0, 25)
+jumpInput.Position = UDim2.new(0, 10, 0, 75)
+jumpInput.BackgroundColor3 = Color3.fromRGB(40,40,40)
+jumpInput.TextColor3 = Color3.new(1,1,1)
+jumpInput.Text = tostring(highJumpPower)
+jumpInput.ClearTextOnFocus = false
+jumpInput.Font = Enum.Font.Gotham
+jumpInput.TextScaled = true
+jumpInput.PlaceholderText = "ใส่ค่ากระโดด (สูงสุด 100)"
+jumpInput.Parent = mainFrame
+
+-- Speed Section
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0, 150, 0, 25)
+speedLabel.Position = UDim2.new(0, 10, 0, 110)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Speed Run"
+speedLabel.TextColor3 = Color3.new(1,1,1)
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.TextScaled = true
+speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+speedLabel.Parent = mainFrame
+
+local speedToggle = Instance.new("TextButton")
+speedToggle.Size = UDim2.new(0, 50, 0, 25)
+speedToggle.Position = UDim2.new(0, 170, 0, 110)
+speedToggle.BackgroundColor3 = Color3.fromRGB(70,70,70)
+speedToggle.TextColor3 = Color3.new(1,1,1)
+speedToggle.Font = Enum.Font.GothamBold
+speedToggle.TextScaled = true
+speedToggle.Text = "OFF"
+speedToggle.Parent = mainFrame
+
+local speedInput = Instance.new("TextBox")
+speedInput.Size = UDim2.new(0, 230, 0, 25)
+speedInput.Position = UDim2.new(0, 10, 0, 140)
+speedInput.BackgroundColor3 = Color3.fromRGB(40,40,40)
+speedInput.TextColor3 = Color3.new(1,1,1)
+speedInput.Text = tostring(speedMultiplier)
+speedInput.ClearTextOnFocus = false
+speedInput.Font = Enum.Font.Gotham
+speedInput.TextScaled = true
+speedInput.PlaceholderText = "ใส่ค่าสปีด (มากกว่า 0)"
+speedInput.Parent = mainFrame
+
+-- ปุ่ม Toggle GUI เป็นตัว M แบบลากได้
+local toggleButton = Instance.new("TextLabel")
+toggleButton.Name = "ToggleButton"
+toggleButton.Size = UDim2.new(0, 30, 0, 30)
+toggleButton.Position = UDim2.new(0, 270, 0, 100)
+toggleButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
+toggleButton.TextColor3 = Color3.new(1,1,1)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextScaled = true
+toggleButton.Text = "M"
+toggleButton.TextXAlignment = Enum.TextXAlignment.Center
+toggleButton.TextYAlignment = Enum.TextYAlignment.Center
+toggleButton.Parent = screenGui
+toggleButton.Active = true
+
+-- ฟังก์ชันลากปุ่ม M
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+	local delta = input.Position - dragStart
+	toggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+									  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+toggleButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = toggleButton.Position
+		
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+toggleButton.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+-- Toggle GUI Visibility
+toggleButton.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if not dragging then
+			mainFrame.Visible = not mainFrame.Visible
+		end
+	end
+end)
+
+-- ฟังก์ชันตั้ง JumpPower
 local function setJumpPower(power)
 	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoid = character:WaitForChild("Humanoid")
-	humanoid.UseJumpPower = true
-	humanoid.JumpPower = math.clamp(power, 0, maxJumpPower)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid.UseJumpPower = true
+		humanoid.JumpPower = math.clamp(power, 0, maxJumpPower)
+	end
 end
 
-local function createGui()
-	if playerGui:FindFirstChild("MORI HUB") then
-		screenGui = playerGui:FindFirstChild("MORI HUB")
-		mainFrame = screenGui:FindFirstChild("mainFrame")
-		return
+-- Toggle Jump Button
+jumpToggle.MouseButton1Click:Connect(function()
+	highJumpEnabled = not highJumpEnabled
+	if highJumpEnabled then
+		setJumpPower(tonumber(jumpInput.Text) or highJumpPower)
+		jumpToggle.Text = "ON"
+		jumpToggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+	else
+		setJumpPower(defaultJumpPower)
+		jumpToggle.Text = "OFF"
+		jumpToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 	end
-	
-	screenGui = Instance.new("ScreenGui")
-	screenGui.Name = "MORI HUB"
-	screenGui.ResetOnSpawn = false
-	screenGui.Parent = playerGui
+end)
 
-	local toggleButton = Instance.new("ImageButton")
-	toggleButton.Name = "ToggleButton"
-	toggleButton.Size = UDim2.new(0, 40, 0, 40)
-	toggleButton.Position = UDim2.new(0, 10, 0.5, -20)
-	toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	toggleButton.BackgroundTransparency = 0.8
-	toggleButton.Image = ""
-	toggleButton.Parent = screenGui
-	toggleButton.Active = true
-	toggleButton.Draggable = true
-
-	local letterM = Instance.new("TextLabel")
-	letterM.Size = UDim2.new(1, 0, 1, 0)
-	letterM.BackgroundTransparency = 1
-	letterM.Text = "M"
-	letterM.TextColor3 = Color3.new(1, 1, 1)
-	letterM.Font = Enum.Font.GothamBold
-	letterM.TextScaled = true
-	letterM.Parent = toggleButton
-
-	mainFrame = Instance.new("Frame")
-	mainFrame.Name = "mainFrame"
-	mainFrame.Size = UDim2.new(0, 250, 0, 140)
-	mainFrame.Position = UDim2.new(0, 60, 0.5, -70)
-	mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	mainFrame.BorderSizePixel = 0
-	mainFrame.Active = true
-	mainFrame.Draggable = true
-	mainFrame.Parent = screenGui
-	Instance.new("UICorner", mainFrame)
-
-	local layout = Instance.new("UIListLayout", mainFrame)
-	layout.Padding = UDim.new(0, 10)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-
-	local titleLabel = Instance.new("TextLabel")
-	titleLabel.Text = "MORI HUB - Jump Control"
-	titleLabel.Size = UDim2.new(1, -20, 0, 25)
-	titleLabel.BackgroundTransparency = 1
-	titleLabel.TextColor3 = Color3.new(1, 1, 1)
-	titleLabel.Font = Enum.Font.GothamBold
-	titleLabel.TextScaled = true
-	titleLabel.Parent = mainFrame
-
-	local toggleFrame = Instance.new("Frame")
-	toggleFrame.Size = UDim2.new(0, 60, 0, 25)
-	toggleFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	toggleFrame.AnchorPoint = Vector2.new(0.5, 0)
-	toggleFrame.Position = UDim2.new(0.5, 0, 0, 0)
-	toggleFrame.Parent = mainFrame
-	Instance.new("UICorner", toggleFrame)
-
-	local toggleButtonSwitch = Instance.new("TextButton")
-	toggleButtonSwitch.Size = UDim2.new(0, 22, 0, 22)
-	toggleButtonSwitch.Position = UDim2.new(0, 2, 0, 1.5)
-	toggleButtonSwitch.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-	toggleButtonSwitch.Text = ""
-	toggleButtonSwitch.AutoButtonColor = false
-	toggleButtonSwitch.Parent = toggleFrame
-	Instance.new("UICorner", toggleButtonSwitch)
-
-	local statusLabel = Instance.new("TextLabel")
-	statusLabel.Text = "ปิดกระโดดสูง"
-	statusLabel.Size = UDim2.new(1, -20, 0, 25)
-	statusLabel.BackgroundTransparency = 1
-	statusLabel.TextColor3 = Color3.new(1, 1, 1)
-	statusLabel.Font = Enum.Font.Gotham
-	statusLabel.TextScaled = true
-	statusLabel.Parent = mainFrame
-
-	local jumpInput = Instance.new("TextBox")
-	jumpInput.Text = tostring(highJumpPower)
-	jumpInput.PlaceholderText = "ใส่ค่ากระโดด..."
-	jumpInput.Size = UDim2.new(1, -20, 0, 30)
-	jumpInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	jumpInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-	jumpInput.Font = Enum.Font.Gotham
-	jumpInput.TextScaled = true
-	jumpInput.ClearTextOnFocus = false
-	jumpInput.Parent = mainFrame
-
-	local function updateToggleUI()
-		local goalPos = highJumpEnabled and UDim2.new(0, 36, 0, 1.5) or UDim2.new(0, 2, 0, 1.5)
-		local goalColor = highJumpEnabled and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(70, 70, 70)
-		local tweenPos = TweenService:Create(toggleButtonSwitch, TweenInfo.new(0.2), {Position = goalPos})
-		local tweenBG = TweenService:Create(toggleFrame, TweenInfo.new(0.2), {BackgroundColor3 = goalColor})
-		tweenPos:Play()
-		tweenBG:Play()
-		statusLabel.Text = highJumpEnabled and "เปิดกระโดดสูง" or "ปิดกระโดดสูง"
-	end
-
-	toggleButtonSwitch.MouseButton1Click:Connect(function()
-		highJumpEnabled = not highJumpEnabled
+-- Jump Input Update
+jumpInput.FocusLost:Connect(function()
+	local num = tonumber(jumpInput.Text)
+	if num and num > 0 and num <= maxJumpPower then
+		highJumpPower = num
 		if highJumpEnabled then
 			setJumpPower(highJumpPower)
-		else
-			setJumpPower(defaultJumpPower)
 		end
-		updateToggleUI()
-	end)
+	else
+		jumpInput.Text = tostring(highJumpPower)
+	end
+end)
 
-	jumpInput.FocusLost:Connect(function()
-		local num = tonumber(jumpInput.Text)
-		if num then
-			highJumpPower = math.clamp(num, 0, maxJumpPower)
-			jumpInput.Text = tostring(highJumpPower)
-			if highJumpEnabled then
-				setJumpPower(highJumpPower)
-			end
-		end
-	end)
+-- Toggle Speed Button
+speedToggle.MouseButton1Click:Connect(function()
+	speedEnabled = not speedEnabled
+	if speedEnabled then
+		speedToggle.Text = "ON"
+		speedToggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+	else
+		speedToggle.Text = "OFF"
+		speedToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+	end
+end)
 
-	local guiVisible = true
-	toggleButton.MouseButton1Click:Connect(function()
-		guiVisible = not guiVisible
-		mainFrame.Visible = guiVisible
-	end)
+-- Speed Input Update
+speedInput.FocusLost:Connect(function()
+	local num = tonumber(speedInput.Text)
+	if num and num > 0 then
+		speedMultiplier = num
+	else
+		speedInput.Text = tostring(speedMultiplier)
+	end
+end)
 
-	updateToggleUI()
-end
-
-createGui()
-
--- ตั้ง JumpPower เริ่มต้นเป็น 20 (ปิด)
+-- ตั้ง JumpPower เริ่มต้น
 setJumpPower(defaultJumpPower)
 
+-- ตั้ง JumpPower ตอนโหลดตัวละครใหม่
 player.CharacterAdded:Connect(function(char)
 	local humanoid = char:WaitForChild("Humanoid")
 	humanoid.UseJumpPower = true
@@ -166,5 +243,19 @@ player.CharacterAdded:Connect(function(char)
 		setJumpPower(highJumpPower)
 	else
 		setJumpPower(defaultJumpPower)
+	end
+end)
+
+-- ระบบ Speed Run ปรับตามเฟรมเรต
+RunService.RenderStepped:Connect(function(delta)
+	if speedEnabled and player.Character then
+		local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+		local root = player.Character:FindFirstChild("HumanoidRootPart")
+		if humanoid and root then
+			local moveDir = humanoid.MoveDirection
+			if moveDir.Magnitude > 0 then
+				root.CFrame = root.CFrame + moveDir.Unit * speedMultiplier * delta * 60
+			end
+		end
 	end
 end)
