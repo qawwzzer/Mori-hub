@@ -114,7 +114,7 @@ local function createCountdownGui()
 	return timerLabel
 end
 
--- GUI Friend List
+-- GUI Friend List (ปรับเล็กลงและย้ายไปซ้ายบน)
 local friendListBox
 local function createFriendListGui()
 	local gui = LocalPlayer:WaitForChild("PlayerGui")
@@ -129,8 +129,8 @@ local function createFriendListGui()
 
 	local frame = Instance.new("Frame")
 	frame.Name = "ListFrame"
-	frame.Size = UDim2.new(0, 200, 0, 200)
-	frame.Position = UDim2.new(1, -210, 0, 10)
+	frame.Size = UDim2.new(0, 140, 0, 140) -- เล็กลงจาก 200x200
+	frame.Position = UDim2.new(0, 10, 0, 10) -- ขอบซ้ายบน
 	frame.BackgroundTransparency = 0.3
 	frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	frame.BorderSizePixel = 0
@@ -139,15 +139,15 @@ local function createFriendListGui()
 	local title = Instance.new("TextLabel")
 	title.Text = "ส่งคำขอแล้ว:"
 	title.Font = Enum.Font.SourceSansBold
-	title.TextSize = 18
+	title.TextSize = 14 -- เล็กลงจาก 18
 	title.TextColor3 = Color3.fromRGB(255, 255, 255)
-	title.Size = UDim2.new(1, 0, 0, 24)
+	title.Size = UDim2.new(1, 0, 0, 20)
 	title.BackgroundTransparency = 1
 	title.Parent = frame
 
 	local scrolling = Instance.new("ScrollingFrame")
-	scrolling.Position = UDim2.new(0, 0, 0, 24)
-	scrolling.Size = UDim2.new(1, 0, 1, -24)
+	scrolling.Position = UDim2.new(0, 0, 0, 20)
+	scrolling.Size = UDim2.new(1, 0, 1, -20)
 	scrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
 	scrolling.ScrollBarThickness = 4
 	scrolling.BackgroundTransparency = 1
@@ -165,14 +165,14 @@ local function updateFriendListGui()
 	for name, _ in pairs(friendSentList) do
 		local label = Instance.new("TextLabel")
 		label.Text = name
-		label.Size = UDim2.new(1, -5, 0, 20)
+		label.Size = UDim2.new(1, -5, 0, 16) -- เล็กลงจาก 20
 		label.Position = UDim2.new(0, 5, 0, y)
-		label.TextSize = 16
+		label.TextSize = 12 -- เล็กลงจาก 16
 		label.Font = Enum.Font.SourceSans
 		label.TextColor3 = Color3.new(1,1,1)
 		label.BackgroundTransparency = 1
 		label.Parent = friendListBox
-		y = y + 20
+		y = y + 16
 	end
 	friendListBox.CanvasSize = UDim2.new(0, 0, 0, y)
 end
