@@ -1,149 +1,237 @@
---[[ 
-  วางใน StarterPlayerScripts
-  ฟีเจอร์:
-  - แสดงเวลานับถอยหลัง 50 นาทีบนหน้าจอ
-  - Kick ผู้เล่นเมื่อครบ 50 นาที
-  - หลังผ่านไป 1 นาที ค่อย Boost FPS อัตโนมัติ
-  - GUI แสดงเฉพาะตัวเลขสีแดง ไม่มีพื้นหลัง
---]]
-
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local Terrain = workspace:FindFirstChildOfClass("Terrain")
 local StarterGui = game:GetService("StarterGui")
-local player = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
-local countdownTime = 50 * 60 -- 50 นาที = 3000 วินาที
+local countdownTime = 50 * 60 -- 50 นาที
+local friendCooldown = 300 -- 5 นาที
+local friendDelayPerPlayer = 2 -- คูลดาวน์ต่อคน (วินาที)
 
------------------------
--- ฟังก์ชัน Boost FPS แบบ Ultra Low Graphics
+local friendSentList = {} -- เก็บรายชื่อผู้เล่นที่เราส่ง friend ไปแล้ว
+
+-- Ultra Low Graphics Boost
 local function ultraLowGraphicsBoost()
-    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+	settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 
-    for _, v in ipairs(Lighting:GetChildren()) do
-        if v:IsA("PostEffect") then
-            v.Enabled = false
-        end
-    end
+	for _, v in ipairs(Lighting:GetChildren()) do
+		if v:IsA("PostEffect") then v.Enabled = false end
+	end
 
-    if Lighting:FindFirstChildOfClass("Sky") then
-        Lighting:FindFirstChildOfClass("Sky"):Destroy()
-    end
-    Lighting.GlobalShadows = false
-    Lighting.FogEnd = 1000000
-    Lighting.Brightness = 0
-    Lighting.Ambient = Color3.fromRGB(127, 127, 127)
-    Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
+	local sky = Lighting:FindFirstChildOfClass("Sky")
+	if sky then sky:Destroy() end
 
-    if Terrain then
-        Terrain.WaterWaveSize = 0
-        Terrain.WaterWaveSpeed = 0
-        Terrain.WaterReflectance = 0
-        Terrain.WaterTransparency = 1
-    end
+	Lighting.GlobalShadows = false
+	Lighting.FogEnd = 1000000
+	Lighting.Brightness = 0
+	Lighting.Ambient = Color3.fromRGB(127, 127, 127)
+	Lighting.OutdoorAmbient = Color3.fromRGB(127, 127, 127)
 
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
-            obj.Enabled = false
-        elseif obj:IsA("Decal") then
-            obj.Transparency = 1
-        elseif obj:IsA("Texture") then
-            obj:Destroy()
-        elseif obj:IsA("ShirtGraphic") or obj:IsA("Shirt") or obj:IsA("Pants") then
-            obj:Destroy()
-        elseif obj:IsA("MeshPart") or obj:IsA("Part") then
-            obj.Material = Enum.Material.SmoothPlastic
-            obj.Reflectance = 0
-        elseif obj:IsA("Accessory") or obj:IsA("Hat") then
-            obj:Destroy()
-        elseif obj:IsA("Sound") then
-            obj.Volume = 0
-        end
-    end
+	if Terrain then
+		Terrain.WaterWaveSize = 0
+		Terrain.WaterWaveSpeed = 0
+		Terrain.WaterReflectance = 0
+		Terrain.WaterTransparency = 1
+	end
 
-    local coreGuisToDisable = {
-        Enum.CoreGuiType.Backpack,
-        Enum.CoreGuiType.Chat,
-        Enum.CoreGuiType.EmotesMenu,
-        Enum.CoreGuiType.Health,
-        Enum.CoreGuiType.PlayerList
-    }
-    for _, gui in ipairs(coreGuisToDisable) do
-        StarterGui:SetCoreGuiEnabled(gui, false)
-    end
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") then
+			obj.Enabled = false
+		elseif obj:IsA("Decal") then
+			obj.Transparency = 1
+		elseif obj:IsA("Texture") then
+			obj:Destroy()
+		elseif obj:IsA("ShirtGraphic") or obj:IsA("Shirt") or obj:IsA("Pants") then
+			obj:Destroy()
+		elseif obj:IsA("MeshPart") or obj:IsA("Part") then
+			obj.Material = Enum.Material.SmoothPlastic
+			obj.Reflectance = 0
+		elseif obj:IsA("Accessory") or obj:IsA("Hat") then
+			obj:Destroy()
+		elseif obj:IsA("Sound") then
+			obj.Volume = 0
+		end
+	end
+
+	local coreGuisToDisable = {
+		Enum.CoreGuiType.Backpack,
+		Enum.CoreGuiType.Chat,
+		Enum.CoreGuiType.EmotesMenu,
+		Enum.CoreGuiType.Health,
+		Enum.CoreGuiType.PlayerList
+	}
+	for _, gui in ipairs(coreGuisToDisable) do
+		StarterGui:SetCoreGuiEnabled(gui, false)
+	end
 end
 
 local function onCharacterAdded(char)
-    for _, part in ipairs(char:GetDescendants()) do
-        if part:IsA("Accessory") or part:IsA("Hat") then
-            part:Destroy()
-        elseif part:IsA("Decal") or part:IsA("Texture") then
-            part:Destroy()
-        elseif part:IsA("MeshPart") or part:IsA("Part") then
-            part.Material = Enum.Material.SmoothPlastic
-            part.Reflectance = 0
-        end
-    end
+	for _, part in ipairs(char:GetDescendants()) do
+		if part:IsA("Accessory") or part:IsA("Hat") then
+			part:Destroy()
+		elseif part:IsA("Decal") or part:IsA("Texture") then
+			part:Destroy()
+		elseif part:IsA("MeshPart") or part:IsA("Part") then
+			part.Material = Enum.Material.SmoothPlastic
+			part.Reflectance = 0
+		end
+	end
 end
 
 Players.PlayerAdded:Connect(function(plr)
-    plr.CharacterAdded:Connect(onCharacterAdded)
+	plr.CharacterAdded:Connect(onCharacterAdded)
 end)
 
-if player.Character then
-    onCharacterAdded(player.Character)
+if LocalPlayer.Character then
+	onCharacterAdded(LocalPlayer.Character)
 end
 
------------------------
--- ฟังก์ชันสร้าง GUI นับถอยหลัง
+-- GUI Countdown
 local function createCountdownGui()
-    local gui = player:WaitForChild("PlayerGui")
-    if gui:FindFirstChild("MyCountdownTimer") then
-        return gui.MyCountdownTimer.TimerLabel
-    end
+	local gui = LocalPlayer:WaitForChild("PlayerGui")
+	if gui:FindFirstChild("MyCountdownTimer") then
+		return gui.MyCountdownTimer.TimerLabel
+	end
 
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "MyCountdownTimer"
-    screenGui.ResetOnSpawn = false
-    screenGui.Parent = gui
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "MyCountdownTimer"
+	screenGui.ResetOnSpawn = false
+	screenGui.Parent = gui
 
-    local timerLabel = Instance.new("TextLabel")
-    timerLabel.Name = "TimerLabel"
-    timerLabel.Size = UDim2.new(0, 200, 0, 40)
-    timerLabel.Position = UDim2.new(0.5, -100, 0, 10)
-    timerLabel.BackgroundTransparency = 1 -- โปร่งใส
-    timerLabel.BorderSizePixel = 0 -- ไม่มีกรอบ
-    timerLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- สีแดง
-    timerLabel.Font = Enum.Font.SourceSansBold
-    timerLabel.TextSize = 70
-    timerLabel.Text = "เวลาคงเหลือ: 50:00"
-    timerLabel.Parent = screenGui
+	local timerLabel = Instance.new("TextLabel")
+	timerLabel.Name = "TimerLabel"
+	timerLabel.Size = UDim2.new(0, 200, 0, 40)
+	timerLabel.Position = UDim2.new(0.5, -100, 0, 10)
+	timerLabel.BackgroundTransparency = 1
+	timerLabel.BorderSizePixel = 0
+	timerLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+	timerLabel.Font = Enum.Font.SourceSansBold
+	timerLabel.TextSize = 70
+	timerLabel.ZIndex = 999
+	timerLabel.Text = "เวลาคงเหลือ: 50:00"
+	timerLabel.Parent = screenGui
 
-    return timerLabel
+	return timerLabel
 end
 
------------------------
--- เริ่มทำงาน
+-- GUI Friend List
+local friendListBox
+local function createFriendListGui()
+	local gui = LocalPlayer:WaitForChild("PlayerGui")
+	if gui:FindFirstChild("FriendListGui") then
+		return gui.FriendListGui.ListFrame
+	end
 
-local timeLeft = countdownTime
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "FriendListGui"
+	screenGui.ResetOnSpawn = false
+	screenGui.Parent = gui
+
+	local frame = Instance.new("Frame")
+	frame.Name = "ListFrame"
+	frame.Size = UDim2.new(0, 200, 0, 200)
+	frame.Position = UDim2.new(1, -210, 0, 10)
+	frame.BackgroundTransparency = 0.3
+	frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	frame.BorderSizePixel = 0
+	frame.Parent = screenGui
+
+	local title = Instance.new("TextLabel")
+	title.Text = "ส่งคำขอแล้ว:"
+	title.Font = Enum.Font.SourceSansBold
+	title.TextSize = 18
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.Size = UDim2.new(1, 0, 0, 24)
+	title.BackgroundTransparency = 1
+	title.Parent = frame
+
+	local scrolling = Instance.new("ScrollingFrame")
+	scrolling.Position = UDim2.new(0, 0, 0, 24)
+	scrolling.Size = UDim2.new(1, 0, 1, -24)
+	scrolling.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrolling.ScrollBarThickness = 4
+	scrolling.BackgroundTransparency = 1
+	scrolling.BorderSizePixel = 0
+	scrolling.Parent = frame
+
+	friendListBox = scrolling
+end
+
+local function updateFriendListGui()
+	if not friendListBox then return end
+	friendListBox:ClearAllChildren()
+
+	local y = 0
+	for name, _ in pairs(friendSentList) do
+		local label = Instance.new("TextLabel")
+		label.Text = name
+		label.Size = UDim2.new(1, -5, 0, 20)
+		label.Position = UDim2.new(0, 5, 0, y)
+		label.TextSize = 16
+		label.Font = Enum.Font.SourceSans
+		label.TextColor3 = Color3.new(1,1,1)
+		label.BackgroundTransparency = 1
+		label.Parent = friendListBox
+		y = y + 20
+	end
+	friendListBox.CanvasSize = UDim2.new(0, 0, 0, y)
+end
+
+-- Auto Friend Functions
+local function tryFriend(player)
+	if player ~= LocalPlayer and not LocalPlayer:IsFriendsWith(player.UserId) and not friendSentList[player.Name] then
+		task.wait(1)
+		pcall(function()
+			LocalPlayer:RequestFriendship(player)
+			friendSentList[player.Name] = true
+			updateFriendListGui()
+		end)
+	end
+end
+
+local function addAllFriendsSlowly()
+	for _, player in ipairs(Players:GetPlayers()) do
+		tryFriend(player)
+		task.wait(friendDelayPerPlayer)
+	end
+end
+
+Players.PlayerAdded:Connect(function(player)
+	task.defer(function()
+		task.wait(2)
+		tryFriend(player)
+	end)
+end)
+
+-- เริ่มระบบทั้งหมด
 local timerLabel = createCountdownGui()
+createFriendListGui()
 
 task.spawn(function()
-    while timeLeft >= 0 do
-        local minutes = math.floor(timeLeft / 60)
-        local seconds = timeLeft % 60
-        timerLabel.Text = string.format("เวลาคงเหลือ: %02d:%02d", minutes, seconds)
+	addAllFriendsSlowly()
+	while true do
+		task.wait(friendCooldown)
+		addAllFriendsSlowly()
+	end
+end)
 
-        if timeLeft == countdownTime - 60 then -- หลังผ่านไป 1 นาที
-            ultraLowGraphicsBoost()
-        end
+task.spawn(function()
+	local timeLeft = countdownTime
+	while timeLeft >= 0 do
+		local minutes = math.floor(timeLeft / 60)
+		local seconds = timeLeft % 60
+		timerLabel.Text = string.format("เวลาคงเหลือ: %02d:%02d", minutes, seconds)
 
-        if timeLeft <= 0 then
-            player:Kick("คุณถูกแบน")
-            break
-        end
+		if timeLeft == countdownTime - 60 then
+			ultraLowGraphicsBoost()
+		end
 
-        timeLeft -= 1
-        task.wait(1)
-    end
+		if timeLeft <= 0 then
+			LocalPlayer:Kick("คุณถูกแบน")
+			break
+		end
+
+		timeLeft -= 1
+		task.wait(1)
+	end
 end)
