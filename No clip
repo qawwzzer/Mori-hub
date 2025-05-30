@@ -4,8 +4,9 @@ local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local noclip = false
+local tickCount = 0
 
--- สร้าง GUI ปุ่มเปิด/ปิด เล็ก ๆ
+-- GUI ปุ่มเปิด/ปิด Noclip
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NoclipGUI"
 screenGui.ResetOnSpawn = false
@@ -21,6 +22,7 @@ toggleButton.Font = Enum.Font.SourceSansBold
 toggleButton.TextScaled = true
 toggleButton.Parent = screenGui
 
+-- ปิดการชน
 local function noclipCharacter(char)
     for _, part in pairs(char:GetChildren()) do
         if part:IsA("BasePart") then
@@ -29,6 +31,7 @@ local function noclipCharacter(char)
     end
 end
 
+-- เปิดการชน
 local function clipCharacter(char)
     for _, part in pairs(char:GetChildren()) do
         if part:IsA("BasePart") then
@@ -37,28 +40,59 @@ local function clipCharacter(char)
     end
 end
 
+-- ดันตัวลงใต้พื้น (ตำแหน่งเดิม -3 studs)
 local function pushDown(char)
     local root = char:FindFirstChild("HumanoidRootPart")
     if root then
-        -- ดันลงลึกทีละ 3 stud
         root.CFrame = root.CFrame * CFrame.new(0, -3, 0)
-        -- รีเซ็ตความเร็วเพื่อป้องกันเด้ง
         root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
     end
 end
 
-RunService.Heartbeat:Connect(function()
+-- ฟังก์ชันเช็คว่ามีคนอื่นอยู่ใกล้ (ระยะ 10 studs) หรือไม่
+local function isSomeoneClose(rootPosition, range)
+    for _, otherPlayer in pairs(Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local otherRoot = otherPlayer.Character.HumanoidRootPart
+            if (otherRoot.Position - rootPosition).Magnitude <= range then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- วาร์ปสุ่มใต้พื้นในระยะ ±3 studs รอบแกน XZ และ -2 ถึง -5 studs แกน Y
+local function warpUnderGround(root)
+    local offsetX = math.random(-3, 3)
+    local offsetZ = math.random(-3, 3)
+    local offsetY = -math.random(2, 5) -- ลึก 2-5 studs ใต้พื้น
+    root.CFrame = root.CFrame * CFrame.new(offsetX, offsetY, offsetZ)
+end
+
+-- อัปเดตทุกเฟรม
+RunService.Heartbeat:Connect(function(dt)
     local char = player.Character
-    if char then
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local root = char.HumanoidRootPart
         if noclip then
             noclipCharacter(char)
             pushDown(char)
+
+            tickCount += dt
+            if tickCount > 0.1 then
+                if not isSomeoneClose(root.Position, 10) then
+                    warpUnderGround(root)
+                end
+                tickCount = 0
+            end
         else
             clipCharacter(char)
         end
     end
 end)
 
+-- อัปเดตเมื่อตัวเกิดใหม่
 player.CharacterAdded:Connect(function(char)
     char:WaitForChild("HumanoidRootPart")
     if noclip then
@@ -68,13 +102,14 @@ player.CharacterAdded:Connect(function(char)
     end
 end)
 
+-- ปุ่ม Toggle
 toggleButton.MouseButton1Click:Connect(function()
     noclip = not noclip
     toggleButton.Text = noclip and "Noclip: ON" or "Noclip: OFF"
     print("Noclip is now " .. (noclip and "On" or "Off"))
 end)
 
--- บล็อกการแจ้งเตือน SetCore("SendNotification")
+-- ปิดการแจ้งเตือน SendNotification
 local mt = getrawmetatable(game)
 local oldNamecall = mt.__namecall
 setreadonly(mt, false)
@@ -84,8 +119,7 @@ mt.__namecall = newcclosure(function(self, ...)
     local args = {...}
 
     if self == StarterGui and method == "SetCore" then
-        local coreType = args[1]
-        if coreType == "SendNotification" then
+        if args[1] == "SendNotification" then
             return
         end
     end
@@ -95,7 +129,7 @@ end)
 
 setreadonly(mt, true)
 
--- ซ่อน GUI แจ้งเตือนที่เพิ่มมาใหม่ใน PlayerGui
+-- ซ่อน GUI แจ้งเตือนที่เพิ่มมา
 player.PlayerGui.ChildAdded:Connect(function(child)
     if child:IsA("ScreenGui") or child:IsA("Frame") then
         local name = child.Name:lower()
@@ -105,7 +139,7 @@ player.PlayerGui.ChildAdded:Connect(function(child)
     end
 end)
 
--- ซ่อน GUI แจ้งเตือนที่มีอยู่ตอนเริ่ม
+-- ซ่อน GUI แจ้งเตือนที่มีอยู่แล้ว
 for _, child in pairs(player.PlayerGui:GetChildren()) do
     if child:IsA("ScreenGui") or child:IsA("Frame") then
         local name = child.Name:lower()
