@@ -7,7 +7,7 @@ local LocalPlayer = Players.LocalPlayer
 local countdownTime = 50 * 60 -- 50 นาที
 local friendCooldown = 300 -- 5 นาที
 local friendDelayPerPlayer = 2 -- คูลดาวน์ต่อคน (วินาที)
-local maxFriendsPerServer = 5
+local maxFriendsPerServer = 2
 local friendsSentCount = 0
 
 local friendSentList = {}
