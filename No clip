@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
 
 local player = Players.LocalPlayer
 local noclip = false
@@ -40,7 +39,7 @@ local function clipCharacter(char)
     end
 end
 
--- ดันตัวลงใต้พื้น (ตำแหน่งเดิม -3 studs)
+-- ดันตัวลงใต้พื้น (ตำแหน่งเดิม -2.5 studs)
 local function pushDown(char)
     local root = char:FindFirstChild("HumanoidRootPart")
     if root then
@@ -49,7 +48,7 @@ local function pushDown(char)
     end
 end
 
--- ฟังก์ชันเช็คว่ามีคนอื่นอยู่ใกล้ (ระยะ 10 studs) หรือไม่
+-- เช็คว่ามีคนอื่นอยู่ใกล้ (ระยะ 10 studs) หรือไม่
 local function isSomeoneClose(rootPosition, range)
     for _, otherPlayer in pairs(Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -62,11 +61,11 @@ local function isSomeoneClose(rootPosition, range)
     return false
 end
 
--- วาร์ปสุ่มใต้พื้นในระยะ ±3 studs รอบแกน XZ และ -2 ถึง -5 studs แกน Y
+-- วาร์ปสุ่มใต้พื้น ±3 studs รอบแกน XZ และ -2 ถึง -5 studs แกน Y
 local function warpUnderGround(root)
     local offsetX = math.random(-3, 3)
     local offsetZ = math.random(-3, 3)
-    local offsetY = -math.random(1, 2) -- ลึก 2-5 studs ใต้พื้น
+    local offsetY = -math.random(2, 5) -- ลึก 2-5 studs ใต้พื้น
     root.CFrame = root.CFrame * CFrame.new(offsetX, offsetY, offsetZ)
 end
 
@@ -80,7 +79,7 @@ RunService.Heartbeat:Connect(function(dt)
             pushDown(char)
 
             tickCount += dt
-            if tickCount > 0.1 then
+            if tickCount > 0.5 then -- ลดความถี่วาร์ปเป็น 0.5 วิ
                 if not isSomeoneClose(root.Position, 10) then
                     warpUnderGround(root)
                 end
@@ -102,49 +101,9 @@ player.CharacterAdded:Connect(function(char)
     end
 end)
 
--- ปุ่ม Toggle
+-- ปุ่ม Toggle เปิด/ปิด Noclip
 toggleButton.MouseButton1Click:Connect(function()
     noclip = not noclip
     toggleButton.Text = noclip and "Noclip: ON" or "Noclip: OFF"
     print("Noclip is now " .. (noclip and "On" or "Off"))
 end)
-
--- ปิดการแจ้งเตือน SendNotification
-local mt = getrawmetatable(game)
-local oldNamecall = mt.__namecall
-setreadonly(mt, false)
-
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    local args = {...}
-
-    if self == StarterGui and method == "SetCore" then
-        if args[1] == "SendNotification" then
-            return
-        end
-    end
-
-    return oldNamecall(self, ...)
-end)
-
-setreadonly(mt, true)
-
--- ซ่อน GUI แจ้งเตือนที่เพิ่มมา
-player.PlayerGui.ChildAdded:Connect(function(child)
-    if child:IsA("ScreenGui") or child:IsA("Frame") then
-        local name = child.Name:lower()
-        if name:find("notification") or name:find("error") or name:find("hint") then
-            child.Enabled = false
-        end
-    end
-end)
-
--- ซ่อน GUI แจ้งเตือนที่มีอยู่แล้ว
-for _, child in pairs(player.PlayerGui:GetChildren()) do
-    if child:IsA("ScreenGui") or child:IsA("Frame") then
-        local name = child.Name:lower()
-        if name:find("notification") or name:find("error") or name:find("hint") then
-            child.Enabled = false
-        end
-    end
-end
