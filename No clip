@@ -1,0 +1,116 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+local player = Players.LocalPlayer
+local noclip = false
+
+-- สร้าง GUI ปุ่มเปิด/ปิด เล็ก ๆ
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NoclipGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 80, 0, 30)
+toggleButton.Position = UDim2.new(0, 20, 0, 20)
+toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Text = "Noclip: OFF"
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextScaled = true
+toggleButton.Parent = screenGui
+
+local function noclipCharacter(char)
+    for _, part in pairs(char:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end
+
+local function clipCharacter(char)
+    for _, part in pairs(char:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = true
+        end
+    end
+end
+
+local function pushDown(char)
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        -- ดันลงลึกทีละ 3 stud
+        root.CFrame = root.CFrame * CFrame.new(0, -3, 0)
+        -- รีเซ็ตความเร็วเพื่อป้องกันเด้ง
+        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    end
+end
+
+RunService.Heartbeat:Connect(function()
+    local char = player.Character
+    if char then
+        if noclip then
+            noclipCharacter(char)
+            pushDown(char)
+        else
+            clipCharacter(char)
+        end
+    end
+end)
+
+player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("HumanoidRootPart")
+    if noclip then
+        noclipCharacter(char)
+    else
+        clipCharacter(char)
+    end
+end)
+
+toggleButton.MouseButton1Click:Connect(function()
+    noclip = not noclip
+    toggleButton.Text = noclip and "Noclip: ON" or "Noclip: OFF"
+    print("Noclip is now " .. (noclip and "On" or "Off"))
+end)
+
+-- บล็อกการแจ้งเตือน SetCore("SendNotification")
+local mt = getrawmetatable(game)
+local oldNamecall = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    if self == StarterGui and method == "SetCore" then
+        local coreType = args[1]
+        if coreType == "SendNotification" then
+            return
+        end
+    end
+
+    return oldNamecall(self, ...)
+end)
+
+setreadonly(mt, true)
+
+-- ซ่อน GUI แจ้งเตือนที่เพิ่มมาใหม่ใน PlayerGui
+player.PlayerGui.ChildAdded:Connect(function(child)
+    if child:IsA("ScreenGui") or child:IsA("Frame") then
+        local name = child.Name:lower()
+        if name:find("notification") or name:find("error") or name:find("hint") then
+            child.Enabled = false
+        end
+    end
+end)
+
+-- ซ่อน GUI แจ้งเตือนที่มีอยู่ตอนเริ่ม
+for _, child in pairs(player.PlayerGui:GetChildren()) do
+    if child:IsA("ScreenGui") or child:IsA("Frame") then
+        local name = child.Name:lower()
+        if name:find("notification") or name:find("error") or name:find("hint") then
+            child.Enabled = false
+        end
+    end
+end
