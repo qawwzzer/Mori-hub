@@ -1,109 +1,73 @@
+-- LocalScript: ToggleUpsideDown.lua
+
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
-local noclip = false
-local tickCount = 0
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- GUI ปุ่มเปิด/ปิด Noclip
+-- สร้าง GUI
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "NoclipGUI"
+screenGui.Name = "UpsideDownToggleGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
+-- ปุ่ม Toggle
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 80, 0, 30)
-toggleButton.Position = UDim2.new(0, 20, 0, 20)
-toggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.Text = "Noclip: OFF"
+toggleButton.Size = UDim2.new(0, 150, 0, 40)
+toggleButton.Position = UDim2.new(0, 10, 0, 10)
+toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
-toggleButton.TextScaled = true
+toggleButton.TextSize = 20
+toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
 toggleButton.Parent = screenGui
 
--- ปิดการชน
-local function noclipCharacter(char)
-    for _, part in pairs(char:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = false
-        end
-    end
+-- ติดตามสถานะเปิด/ปิด
+local isActive = false
+
+-- ฟังก์ชันวาร์ปลงพื้นและกลับหัว (เท้าพอดีติดพื้น)
+local function activateUpsideDown()
+	character = player.Character or player.CharacterAdded:Wait()
+	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+	local depth = 5.5 -- ปรับความลึกลงให้เท้าติดพื้นพอดี
+	local newPosition = humanoidRootPart.Position - Vector3.new(0, depth, 0)
+	local newCFrame = CFrame.new(newPosition) * CFrame.Angles(math.rad(180), 0, 0)
+
+	humanoidRootPart.Anchored = true
+	humanoidRootPart.CFrame = newCFrame
 end
 
--- เปิดการชน
-local function clipCharacter(char)
-    for _, part in pairs(char:GetChildren()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = true
-        end
-    end
+-- ฟังก์ชันรีเซ็ตกลับสู่ท่าปกติ
+local function resetToNormal()
+	character = player.Character or player.CharacterAdded:Wait()
+	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+	humanoidRootPart.Anchored = false
+	-- ยืนตรงและลอยขึ้นเล็กน้อยเพื่อไม่ติดพื้น
+	local position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+	humanoidRootPart.CFrame = CFrame.new(position)
 end
 
--- ดันตัวลงใต้พื้น (ตำแหน่งเดิม -2.5 studs)
-local function pushDown(char)
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if root then
-        root.CFrame = root.CFrame * CFrame.new(0, -2.5, 0)
-        root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    end
-end
-
--- เช็คว่ามีคนอื่นอยู่ใกล้ (ระยะ 10 studs) หรือไม่
-local function isSomeoneClose(rootPosition, range)
-    for _, otherPlayer in pairs(Players:GetPlayers()) do
-        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local otherRoot = otherPlayer.Character.HumanoidRootPart
-            if (otherRoot.Position - rootPosition).Magnitude <= range then
-                return true
-            end
-        end
-    end
-    return false
-end
-
--- วาร์ปสุ่มใต้พื้น ±3 studs รอบแกน XZ และ -2 ถึง -5 studs แกน Y
-local function warpUnderGround(root)
-    local offsetX = math.random(-3, 3)
-    local offsetZ = math.random(-3, 3)
-    local offsetY = -math.random(2, 3) -- ลึก 2-5 studs ใต้พื้น
-    root.CFrame = root.CFrame * CFrame.new(offsetX, offsetY, offsetZ)
-end
-
--- อัปเดตทุกเฟรม
-RunService.Heartbeat:Connect(function(dt)
-    local char = player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local root = char.HumanoidRootPart
-        if noclip then
-            noclipCharacter(char)
-            pushDown(char)
-
-            tickCount += dt
-            if tickCount > 0.5 then -- ลดความถี่วาร์ปเป็น 0.5 วิ
-                if not isSomeoneClose(root.Position, 10) then
-                    warpUnderGround(root)
-                end
-                tickCount = 0
-            end
-        else
-            clipCharacter(char)
-        end
-    end
-end)
-
--- อัปเดตเมื่อตัวเกิดใหม่
-player.CharacterAdded:Connect(function(char)
-    char:WaitForChild("HumanoidRootPart")
-    if noclip then
-        noclipCharacter(char)
-    else
-        clipCharacter(char)
-    end
-end)
-
--- ปุ่ม Toggle เปิด/ปิด Noclip
+-- กดปุ่ม toggle
 toggleButton.MouseButton1Click:Connect(function()
-    noclip = not noclip
-    toggleButton.Text = noclip and "Noclip: ON" or "Noclip: OFF"
-    print("Noclip is now " .. (noclip and "On" or "Off"))
+	isActive = not isActive
+
+	if isActive then
+		toggleButton.Text = "ปิดฟังก์ชัน (ON)"
+		activateUpsideDown()
+	else
+		toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
+		resetToNormal()
+	end
+end)
+
+-- รีเซ็ตตัวละคร: คืนค่าเริ่มต้น
+player.CharacterAdded:Connect(function(char)
+	character = char
+	local hrp = character:WaitForChild("HumanoidRootPart")
+	task.wait(0.1)
+	hrp.Anchored = false
+	isActive = false
+	toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
 end)
