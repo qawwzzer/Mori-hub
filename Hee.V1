@@ -1,0 +1,63 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "UpsideDownToggleGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 100, 0, 30)
+toggleButton.Position = UDim2.new(0, 10, 0, 10)
+toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 18
+toggleButton.Text = "(OFF)"
+toggleButton.Parent = screenGui
+
+local isActive = false
+
+local function activateUpsideDown()
+    character = player.Character or player.CharacterAdded:Wait()
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    local depth = 5.7
+    local newPosition = humanoidRootPart.Position - Vector3.new(0, depth, 0)
+    local newCFrame = CFrame.new(newPosition) * CFrame.Angles(math.rad(180), 0, 0)
+
+    humanoidRootPart.Anchored = true
+    humanoidRootPart.CFrame = newCFrame
+end
+
+local function resetToNormal()
+    character = player.Character or player.CharacterAdded:Wait()
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+    humanoidRootPart.Anchored = false
+    local position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
+    humanoidRootPart.CFrame = CFrame.new(position)
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+    isActive = not isActive
+
+    if isActive then
+        toggleButton.Text = "(ON)"
+        activateUpsideDown()
+    else
+        toggleButton.Text = "(OFF)"
+        resetToNormal()
+    end
+end)
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    task.wait(0.1)
+    hrp.Anchored = false
+    isActive = false
+    toggleButton.Text = "(OFF)"
+end)
