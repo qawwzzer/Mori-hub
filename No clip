@@ -3,32 +3,28 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- สร้าง GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UpsideDownToggleGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- ปุ่ม Toggle (ขนาดเล็กลง)
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 100, 0, 30)  -- เล็กลงมาก
+toggleButton.Size = UDim2.new(0, 100, 0, 30)
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
 toggleButton.TextSize = 18
-toggleButton.Text = "(OFF)"  -- ลบคำว่า ฟังก์ชัน ออก
+toggleButton.Text = "(OFF)"
 toggleButton.Parent = screenGui
 
--- สถานะเปิด/ปิด
 local isActive = false
 
--- ฟังก์ชันวาร์ปลงพื้นและกลับหัว
 local function activateUpsideDown()
     character = player.Character or player.CharacterAdded:Wait()
     humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-    local depth = 5.5
+    local depth = 5.7
     local newPosition = humanoidRootPart.Position - Vector3.new(0, depth, 0)
     local newCFrame = CFrame.new(newPosition) * CFrame.Angles(math.rad(180), 0, 0)
 
@@ -36,7 +32,6 @@ local function activateUpsideDown()
     humanoidRootPart.CFrame = newCFrame
 end
 
--- ฟังก์ชันรีเซ็ตกลับปกติ
 local function resetToNormal()
     character = player.Character or player.CharacterAdded:Wait()
     humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -46,7 +41,6 @@ local function resetToNormal()
     humanoidRootPart.CFrame = CFrame.new(position)
 end
 
--- กดปุ่ม toggle
 toggleButton.MouseButton1Click:Connect(function()
     isActive = not isActive
 
@@ -59,7 +53,6 @@ toggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- รีเซ็ตสถานะเมื่อเกิดใหม่
 player.CharacterAdded:Connect(function(char)
     character = char
     local hrp = character:WaitForChild("HumanoidRootPart")
