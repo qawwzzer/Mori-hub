@@ -1,17 +1,14 @@
--- LocalScript: ToggleUpsideDown.lua
-
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
--- สร้าง GUI
+-- GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "UpsideDownToggleGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- ปุ่ม Toggle
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 150, 0, 40)
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
@@ -22,15 +19,14 @@ toggleButton.TextSize = 20
 toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
 toggleButton.Parent = screenGui
 
--- ติดตามสถานะเปิด/ปิด
 local isActive = false
 
--- ฟังก์ชันวาร์ปลงพื้นและกลับหัว (เท้าพอดีติดพื้น)
-local function activateUpsideDown()
+-- กลับหัวและมุดดิน (หมุนแค่ HumanoidRootPart)
+local function rotateUpsideDown()
 	character = player.Character or player.CharacterAdded:Wait()
 	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-	local depth = 5.5 -- ปรับความลึกลงให้เท้าติดพื้นพอดี
+	local depth = 5.5
 	local newPosition = humanoidRootPart.Position - Vector3.new(0, depth, 0)
 	local newCFrame = CFrame.new(newPosition) * CFrame.Angles(math.rad(180), 0, 0)
 
@@ -38,36 +34,33 @@ local function activateUpsideDown()
 	humanoidRootPart.CFrame = newCFrame
 end
 
--- ฟังก์ชันรีเซ็ตกลับสู่ท่าปกติ
-local function resetToNormal()
+-- คืนค่าปกติ
+local function resetRotation()
 	character = player.Character or player.CharacterAdded:Wait()
 	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-	humanoidRootPart.Anchored = false
-	-- ยืนตรงและลอยขึ้นเล็กน้อยเพื่อไม่ติดพื้น
 	local position = humanoidRootPart.Position + Vector3.new(0, 5, 0)
 	humanoidRootPart.CFrame = CFrame.new(position)
+	humanoidRootPart.Anchored = false
 end
 
--- กดปุ่ม toggle
+-- Toggle
 toggleButton.MouseButton1Click:Connect(function()
 	isActive = not isActive
 
 	if isActive then
 		toggleButton.Text = "ปิดฟังก์ชัน (ON)"
-		activateUpsideDown()
+		rotateUpsideDown()
 	else
 		toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
-		resetToNormal()
+		resetRotation()
 	end
 end)
 
--- รีเซ็ตตัวละคร: คืนค่าเริ่มต้น
+-- Reset ตัวละคร
 player.CharacterAdded:Connect(function(char)
 	character = char
-	local hrp = character:WaitForChild("HumanoidRootPart")
-	task.wait(0.1)
-	hrp.Anchored = false
+	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 	isActive = false
 	toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
 end)
