@@ -1,7 +1,3 @@
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UpsideDownToggleGui"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 100, 0, 30)
