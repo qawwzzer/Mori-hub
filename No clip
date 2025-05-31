@@ -18,8 +18,8 @@ toggleButton.Position = UDim2.new(0, 10, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
-toggleButton.TextSize = 10
-toggleButton.Text = "เปิดฟังชั่น (OFF)"
+toggleButton.TextSize = 20
+toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
 toggleButton.Parent = screenGui
 
 -- ติดตามสถานะเปิด/ปิด
@@ -30,7 +30,7 @@ local function activateUpsideDown()
 	character = player.Character or player.CharacterAdded:Wait()
 	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-	local depth = 5.5 -- ปรัความลึกลงให้เท้าติดพื้นพอดี
+	local depth = 5.5 -- ปรับความลึกลงให้เท้าติดพื้นพอดี
 	local newPosition = humanoidRootPart.Position - Vector3.new(0, depth, 0)
 	local newCFrame = CFrame.new(newPosition) * CFrame.Angles(math.rad(180), 0, 0)
 
