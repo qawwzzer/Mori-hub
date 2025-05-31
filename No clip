@@ -30,7 +30,7 @@ local function activateUpsideDown()
 	character = player.Character or player.CharacterAdded:Wait()
 	humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-	local depth = 7 -- ปรับความลึกลงให้เท้าติดพื้นพอดี
+	local depth = 9 -- ปรับความลึกลงให้เท้าติดพื้นพอดี
 	local newPosition = humanoidRootPart.Position - Vector3.new(0, depth, 0)
 	local newCFrame = CFrame.new(newPosition) * CFrame.Angles(math.rad(180), 0, 0)
 
