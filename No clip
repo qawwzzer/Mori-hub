@@ -13,13 +13,13 @@ screenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- ปุ่ม Toggle
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 100, 0, 10)
+toggleButton.Size = UDim2.new(0, 70, 0, 10)
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
 toggleButton.TextSize = 20
-toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
+toggleButton.Text = "เปิดฟังก์ชัน (ON)"
 toggleButton.Parent = screenGui
 
 -- ติดตามสถานะเปิด/ปิด
@@ -54,10 +54,10 @@ toggleButton.MouseButton1Click:Connect(function()
 	isActive = not isActive
 
 	if isActive then
-		toggleButton.Text = "ปิดฟังก์ชัน (ON)"
+		toggleButton.Text = "ปิดฟังก์ชัน (OFF)"
 		activateUpsideDown()
 	else
-		toggleButton.Text = "เปิดฟังก์ชัน (OFF)"
+		toggleButton.Text = "เปิดฟังก์ชัน (ON)"
 		resetToNormal()
 	end
 end)
