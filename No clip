@@ -18,7 +18,7 @@ toggleButton.Position = UDim2.new(0, 10, 0, 10)
 toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
-toggleButton.TextSize = 100
+toggleButton.TextSize = 10
 toggleButton.Text = "(OFF)"
 toggleButton.Parent = screenGui
 
