@@ -19,7 +19,7 @@ toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleButton.Font = Enum.Font.SourceSansBold
 toggleButton.TextSize = 10
-toggleButton.Text = " (OFF) "
+toggleButton.Text = "เปิดฟังชั่น (OFF)"
 toggleButton.Parent = screenGui
 
 -- ติดตามสถานะเปิด/ปิด
