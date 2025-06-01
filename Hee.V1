@@ -1,1 +1,75 @@
-local a=game:GetService("Players")local b=a.LocalPlayer local c=b.Character or b.CharacterAdded:Wait()local d=c:WaitForChild("HumanoidRootPart")local e=Instance.new("ScreenGui")e.Name="UpsideDownToggleGui"e.ResetOnSpawn=false e.Parent=b:WaitForChild("PlayerGui")local f=Instance.new("TextButton")f.Size=UDim2.new(0,100,0,30)f.Position=UDim2.new(0,10,0,10)f.BackgroundColor3=Color3.fromRGB(30,30,30)f.TextColor3=Color3.fromRGB(255,255,255)f.Font=Enum.Font.SourceSansBold f.TextSize=18 f.Text="(OFF)"f.Parent=e local g=false local function h()c=b.Character or b.CharacterAdded:Wait()d=c:WaitForChild("HumanoidRootPart")local i=5.7 local j=d.Position-Vector3.new(0,i,0)local k=CFrame.new(j)*CFrame.Angles(math.rad(180),0,0)d.Anchored=true d.CFrame=k end local function l()c=b.Character or b.CharacterAdded:Wait()d=c:WaitForChild("HumanoidRootPart")d.Anchored=false d.CFrame=CFrame.new(d.Position+Vector3.new(0,5,0))end f.MouseButton1Click:Connect(function()g=not g if g then f.Text="(ON)"h()else f.Text="(OFF)"l()end end)b.CharacterAdded:Connect(function(m)c=m local n=c:WaitForChild("HumanoidRootPart")task.wait(0.1)n.Anchored=false g=false f.Text="(OFF)"end)
+local P = game:GetService("Players")
+local U = game:GetService("UserInputService")
+
+local p = P.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local h = c:WaitForChild("HumanoidRootPart")
+
+local s = Instance.new("ScreenGui")
+s.Name = "UpsideDownToggleGui"
+s.ResetOnSpawn = false
+s.Parent = p:WaitForChild("PlayerGui")
+
+local t = Instance.new("TextButton")
+t.Size = UDim2.new(0, 100, 0, 30)
+t.Position = UDim2.new(0, 10, 0, 10)
+t.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+t.TextColor3 = Color3.fromRGB(255, 255, 255)
+t.Font = Enum.Font.SourceSansBold
+t.TextSize = 18
+t.Text = "(OFF)"
+t.Parent = s
+
+local a = false
+
+local function x()
+	c = p.Character or p.CharacterAdded:Wait()
+	h = c:WaitForChild("HumanoidRootPart")
+	local d = 5.7
+	local n = h.Position - Vector3.new(0, d, 0)
+	local f = CFrame.new(n) * CFrame.Angles(math.rad(180), 0, 0)
+	h.Anchored = true
+	h.CFrame = f
+end
+
+local function y()
+	c = p.Character or p.CharacterAdded:Wait()
+	h = c:WaitForChild("HumanoidRootPart")
+	h.Anchored = false
+	local z = h.Position + Vector3.new(0, 5, 0)
+	h.CFrame = CFrame.new(z)
+end
+
+t.MouseButton1Click:Connect(function()
+	a = not a
+	if a then
+		t.Text = "(ON)"
+		x()
+	else
+		t.Text = "(OFF)"
+		y()
+	end
+end)
+
+U.InputBegan:Connect(function(i, g)
+	if g then return end
+	if i.KeyCode == Enum.KeyCode.X then
+		a = not a
+		if a then
+			t.Text = "(ON)"
+			x()
+		else
+			t.Text = "(OFF)"
+			y()
+		end
+	end
+end)
+
+p.CharacterAdded:Connect(function(char)
+	c = char
+	local r = c:WaitForChild("HumanoidRootPart")
+	task.wait(0.1)
+	r.Anchored = false
+	a = false
+	t.Text = "(OFF)"
+end)
