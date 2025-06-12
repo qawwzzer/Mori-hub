@@ -152,7 +152,7 @@ for _, plr in pairs(Players:GetPlayers()) do
 end
 
 -- เริ่ม Boost หลัง 50 วิ และเรียกซ้ำทุก 40 วิ
-task.delay(200, function()
+task.delay(30, function()
 	showBoostMessage()
 	boostFPS()
 	while task.wait(40) do
