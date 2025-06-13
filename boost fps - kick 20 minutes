@@ -1,12 +1,14 @@
 -- ReplicatedStorage.Config
 local Config = {
-    EnableUltraLowGraphics = true,-- ✅ เปิด/ปิด Ultra Low Graphics
-    ShowCountdownTimer = true,
-    CountdownTime = 50 * 60,             -- เวลานับถอยหลัง (วินาที)
-    FriendCooldown = 300,                -- คูลดาวน์ก่อนแอดเพื่อนรอบถัดไป (วินาที)
-    FriendDelayPerPlayer = 2,            -- ดีเลย์ต่อคน (วินาที)
-    MaxFriendsPerServer = 2              -- จำนวนเพื่อนสูงสุดต่อเซิร์ฟเวอร์
+    EnableUltraLowGraphics = true,       -- ✅ เปิด Ultra Low Graphics
+    ShowCountdownTimer = true,           -- ✅ แสดงเวลานับถอยหลัง
+    CountdownTime = 50 * 60,             -- 50 นาที (หน่วย: วินาที)
+    FriendCooldown = 300,                -- 5 นาที (หน่วย: วินาที)
+    FriendDelayPerPlayer = 2,            -- 2 วินาทีต่อการส่งคำขอแต่ละคน
+    MaxFriendsPerServer = 2              -- สูงสุด 2 คนต่อเซิร์ฟเวอร์
 }
+
+return Config
 
 return Config
 local Players = game:GetService("Players")
