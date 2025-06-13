@@ -1,15 +1,27 @@
+-- ReplicatedStorage.Config
+local Config = {
+    EnableUltraLowGraphics = false,       -- ✅ เปิด/ปิด Ultra Low Graphics
+    CountdownTime = 50 * 60,             -- เวลานับถอยหลัง (วินาที)
+    FriendCooldown = 300,                -- คูลดาวน์ก่อนแอดเพื่อนรอบถัดไป (วินาที)
+    FriendDelayPerPlayer = 2,            -- ดีเลย์ต่อคน (วินาที)
+    MaxFriendsPerServer = 2              -- จำนวนเพื่อนสูงสุดต่อเซิร์ฟเวอร์
+}
+
+return Config
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local Terrain = workspace:FindFirstChildOfClass("Terrain")
 local StarterGui = game:GetService("StarterGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local LocalPlayer = Players.LocalPlayer
 
-local countdownTime = 50 * 60 -- 50 นาที
-local friendCooldown = 300 -- 5 นาที
-local friendDelayPerPlayer = 2 -- คูลดาวน์ต่อคน (วินาที)
-local maxFriendsPerServer = 2
+local countdownTime = Config.CountdownTime
+local friendCooldown = Config.FriendCooldown
+local friendDelayPerPlayer = Config.FriendDelayPerPlayer
+local maxFriendsPerServer = Config.MaxFriendsPerServer
 local friendsSentCount = 0
-
 local friendSentList = {}
 
 -- Ultra Low Graphics Boost
@@ -227,7 +239,7 @@ task.spawn(function()
 		local seconds = timeLeft % 60
 		timerLabel.Text = string.format("เวลาคงเหลือ: %02d:%02d", minutes, seconds)
 
-		if timeLeft == countdownTime - 60 then
+		if timeLeft == countdownTime - 60 and Config.EnableUltraLowGraphics then
 			ultraLowGraphicsBoost()
 		end
 
