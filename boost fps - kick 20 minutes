@@ -1,7 +1,7 @@
 -- ReplicatedStorage.Config
 local Config = {
-    EnableUltraLowGraphics = false,-- ✅ เปิด/ปิด Ultra Low Graphics
-    ShowCountdownTimer = false,
+    EnableUltraLowGraphics = true,-- ✅ เปิด/ปิด Ultra Low Graphics
+    ShowCountdownTimer = true,
     CountdownTime = 50 * 60,             -- เวลานับถอยหลัง (วินาที)
     FriendCooldown = 300,                -- คูลดาวน์ก่อนแอดเพื่อนรอบถัดไป (วินาที)
     FriendDelayPerPlayer = 2,            -- ดีเลย์ต่อคน (วินาที)
