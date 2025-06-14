@@ -1,9 +1,10 @@
 local config = {
-    EnableHighJump = true,       -- เปิดหรือปิดระบบกระโดดสูง
-    EnableWarpJump = true,       -- เปิดหรือปิดระบบวาร์ปกระโดด
-    DefaultJumpPower = 20,       -- ค่ากระโดดพื้นฐานเมื่อปิด High Jump
-    HighJumpPower = 50,          -- ค่ากระโดดเมื่อเปิด High Jump
-    WarpJumpPower = 25,          -- ความสูงในการวาร์ปเมื่อกระโดด
+	EnableHighJump = true,
+	EnableWarpJump = true,
+	EnableNoClip = false,
+	DefaultJumpPower = 20,
+	HighJumpPower = 50,
+	WarpJumpPower = 20,
 }
 
 local Players = game:GetService("Players")
@@ -13,43 +14,39 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- ค่าพื้นฐาน
-local defaultJumpPower = 20
-local highJumpPower = 70
+local defaultJumpPower = config.DefaultJumpPower
+local highJumpPower = config.HighJumpPower
 local maxJumpPower = 100
-local warpJumpPower = 50
-local highJumpEnabled = false
-local warpJumpEnabled = false
+local warpJumpPower = config.WarpJumpPower
+local highJumpEnabled = config.EnableHighJump
+local warpJumpEnabled = config.EnableWarpJump
+local noClipEnabled = config.EnableNoClip
 
--- สร้าง GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MORI_HUB"
+-- GUI
+local screenGui = Instance.new("ScreenGui", playerGui)
+screenGui.Name = "MORI"
 screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
 
-local mainFrame = Instance.new("Frame")
+local mainFrame = Instance.new("Frame", screenGui)
 mainFrame.Size = UDim2.new(0, 250, 0, 210)
 mainFrame.Position = UDim2.new(0, 20, 0, 100)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = true
-mainFrame.Parent = screenGui
 Instance.new("UICorner", mainFrame)
 
--- Title
-local titleLabel = Instance.new("TextLabel")
+local titleLabel = Instance.new("TextLabel", mainFrame)
 titleLabel.Size = UDim2.new(1, -20, 0, 25)
 titleLabel.Position = UDim2.new(0, 10, 0, 10)
 titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "MORI HUB Control Panel"
+titleLabel.Text = "MORI Control Panel"
 titleLabel.TextColor3 = Color3.new(1,1,1)
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextScaled = true
-titleLabel.Parent = mainFrame
 
--- High Jump Label
-local jumpLabel = Instance.new("TextLabel")
+-- High Jump UI
+local jumpLabel = Instance.new("TextLabel", mainFrame)
 jumpLabel.Size = UDim2.new(0, 150, 0, 25)
 jumpLabel.Position = UDim2.new(0, 10, 0, 45)
 jumpLabel.BackgroundTransparency = 1
@@ -58,19 +55,17 @@ jumpLabel.TextColor3 = Color3.new(1,1,1)
 jumpLabel.Font = Enum.Font.Gotham
 jumpLabel.TextScaled = true
 jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
-jumpLabel.Parent = mainFrame
 
-local jumpToggle = Instance.new("TextButton")
+local jumpToggle = Instance.new("TextButton", mainFrame)
 jumpToggle.Size = UDim2.new(0, 50, 0, 25)
 jumpToggle.Position = UDim2.new(0, 170, 0, 45)
-jumpToggle.BackgroundColor3 = Color3.fromRGB(70,70,70)
+jumpToggle.BackgroundColor3 = highJumpEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(70,70,70)
 jumpToggle.TextColor3 = Color3.new(1,1,1)
 jumpToggle.Font = Enum.Font.GothamBold
 jumpToggle.TextScaled = true
-jumpToggle.Text = "OFF"
-jumpToggle.Parent = mainFrame
+jumpToggle.Text = highJumpEnabled and "ON" or "OFF"
 
-local jumpInput = Instance.new("TextBox")
+local jumpInput = Instance.new("TextBox", mainFrame)
 jumpInput.Size = UDim2.new(0, 230, 0, 25)
 jumpInput.Position = UDim2.new(0, 10, 0, 75)
 jumpInput.BackgroundColor3 = Color3.fromRGB(40,40,40)
@@ -80,10 +75,9 @@ jumpInput.ClearTextOnFocus = false
 jumpInput.Font = Enum.Font.Gotham
 jumpInput.TextScaled = true
 jumpInput.PlaceholderText = "ใส่ค่ากระโดด (สูงสุด 100)"
-jumpInput.Parent = mainFrame
 
--- Warp Jump Section
-local warpLabel = Instance.new("TextLabel")
+-- Warp Jump UI
+local warpLabel = Instance.new("TextLabel", mainFrame)
 warpLabel.Size = UDim2.new(0, 150, 0, 25)
 warpLabel.Position = UDim2.new(0, 10, 0, 110)
 warpLabel.BackgroundTransparency = 1
@@ -92,19 +86,17 @@ warpLabel.TextColor3 = Color3.new(1,1,1)
 warpLabel.Font = Enum.Font.Gotham
 warpLabel.TextScaled = true
 warpLabel.TextXAlignment = Enum.TextXAlignment.Left
-warpLabel.Parent = mainFrame
 
-local warpToggle = Instance.new("TextButton")
+local warpToggle = Instance.new("TextButton", mainFrame)
 warpToggle.Size = UDim2.new(0, 50, 0, 25)
 warpToggle.Position = UDim2.new(0, 170, 0, 110)
-warpToggle.BackgroundColor3 = Color3.fromRGB(70,70,70)
+warpToggle.BackgroundColor3 = warpJumpEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(70,70,70)
 warpToggle.TextColor3 = Color3.new(1,1,1)
 warpToggle.Font = Enum.Font.GothamBold
 warpToggle.TextScaled = true
-warpToggle.Text = "OFF"
-warpToggle.Parent = mainFrame
+warpToggle.Text = warpJumpEnabled and "ON" or "OFF"
 
-local warpInput = Instance.new("TextBox")
+local warpInput = Instance.new("TextBox", mainFrame)
 warpInput.Size = UDim2.new(0, 230, 0, 25)
 warpInput.Position = UDim2.new(0, 10, 0, 140)
 warpInput.BackgroundColor3 = Color3.fromRGB(40,40,40)
@@ -113,11 +105,30 @@ warpInput.Text = tostring(warpJumpPower)
 warpInput.ClearTextOnFocus = false
 warpInput.Font = Enum.Font.Gotham
 warpInput.TextScaled = true
-warpInput.PlaceholderText = "ใส่ความสูงในการวาร์ป (Default = 50)"
-warpInput.Parent = mainFrame
+warpInput.PlaceholderText = "ใส่ความสูงในการวาร์ป"
 
--- ปุ่ม Toggle GUI แบบลากได้
-local toggleButton = Instance.new("TextLabel")
+-- NoClip UI
+local noclipLabel = Instance.new("TextLabel", mainFrame)
+noclipLabel.Size = UDim2.new(0, 150, 0, 25)
+noclipLabel.Position = UDim2.new(0, 10, 0, 175)
+noclipLabel.BackgroundTransparency = 1
+noclipLabel.Text = "Delete door"
+noclipLabel.TextColor3 = Color3.new(1,1,1)
+noclipLabel.Font = Enum.Font.Gotham
+noclipLabel.TextScaled = true
+noclipLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local noclipToggle = Instance.new("TextButton", mainFrame)
+noclipToggle.Size = UDim2.new(0, 50, 0, 25)
+noclipToggle.Position = UDim2.new(0, 170, 0, 175)
+noclipToggle.BackgroundColor3 = noClipEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(70,70,70)
+noclipToggle.TextColor3 = Color3.new(1,1,1)
+noclipToggle.Font = Enum.Font.GothamBold
+noclipToggle.TextScaled = true
+noclipToggle.Text = noClipEnabled and "ON" or "OFF"
+
+-- Toggle GUI Button
+local toggleButton = Instance.new("TextLabel", screenGui)
 toggleButton.Name = "ToggleButton"
 toggleButton.Size = UDim2.new(0, 30, 0, 30)
 toggleButton.Position = UDim2.new(0, 270, 0, 100)
@@ -128,10 +139,9 @@ toggleButton.TextScaled = true
 toggleButton.Text = "M"
 toggleButton.TextXAlignment = Enum.TextXAlignment.Center
 toggleButton.TextYAlignment = Enum.TextYAlignment.Center
-toggleButton.Parent = screenGui
 toggleButton.Active = true
 
--- ฟังก์ชันลากปุ่ม M
+-- Drag toggle GUI
 local dragging, dragInput, dragStart, startPos
 local function update(input)
 	local delta = input.Position - dragStart
@@ -164,7 +174,6 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
--- คลิกปุ่ม M เพื่อเปิด/ปิด GUI
 toggleButton.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 		if not dragging then
@@ -173,7 +182,7 @@ toggleButton.InputEnded:Connect(function(input)
 	end
 end)
 
--- ตั้ง JumpPower
+-- Set Jump Power function
 local function setJumpPower(power)
 	local character = player.Character or player.CharacterAdded:Wait()
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
@@ -183,46 +192,78 @@ local function setJumpPower(power)
 	end
 end
 
--- High Jump Toggle
+-- Remove doors (BasePart with "door" in name)
+local function removeDoors()
+	for _, obj in pairs(workspace:GetDescendants()) do
+		if obj:IsA("BasePart") and string.find(obj.Name:lower(), "door") then
+			obj:Destroy()
+		end
+	end
+end
+
+-- Setup Warp Jump (แก้ไข: วาปขึ้นอย่างเดียว ไม่วาปลง)
+local function setupWarpJump(humanoid, rootPart)
+	humanoid.Jumping:Connect(function(isJumping)
+		if isJumping and warpJumpEnabled then
+			rootPart.CFrame = rootPart.CFrame + Vector3.new(0, warpJumpPower, 0)
+		end
+	end)
+end
+
+-- Setup NoClip
+local function setupNoClip(character)
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	RunService.Stepped:Connect(function()
+		if noClipEnabled and humanoid and humanoid.Health > 0 then
+			for _, part in pairs(character:GetDescendants()) do
+				if part:IsA("BasePart") and part.CanCollide == true then
+					part.CanCollide = false
+				end
+			end
+		end
+	end)
+end
+
+-- Setup Character
+local function setupCharacter(char)
+	local humanoid = char:WaitForChild("Humanoid")
+	local root = char:WaitForChild("HumanoidRootPart")
+	humanoid.AutoJumpEnabled = false -- ปิดกระโดดเอง
+	humanoid.UseJumpPower = true
+	wait(0.1)
+	setJumpPower(highJumpEnabled and highJumpPower or defaultJumpPower)
+	setupWarpJump(humanoid, root)
+	setupNoClip(char)
+end
+
+if player.Character then setupCharacter(player.Character) end
+player.CharacterAdded:Connect(setupCharacter)
+
+-- Event connections for UI:
+
 jumpToggle.MouseButton1Click:Connect(function()
 	highJumpEnabled = not highJumpEnabled
-	if highJumpEnabled then
-		setJumpPower(tonumber(jumpInput.Text) or highJumpPower)
-		jumpToggle.Text = "ON"
-		jumpToggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-	else
-		setJumpPower(defaultJumpPower)
-		jumpToggle.Text = "OFF"
-		jumpToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	end
+	jumpToggle.Text = highJumpEnabled and "ON" or "OFF"
+	jumpToggle.BackgroundColor3 = highJumpEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(70,70,70)
+	setJumpPower(highJumpEnabled and highJumpPower or defaultJumpPower)
 end)
 
--- Update Jump Power input
 jumpInput.FocusLost:Connect(function()
 	local num = tonumber(jumpInput.Text)
 	if num and num > 0 and num <= maxJumpPower then
 		highJumpPower = num
-		if highJumpEnabled then
-			setJumpPower(highJumpPower)
-		end
+		if highJumpEnabled then setJumpPower(highJumpPower) end
 	else
 		jumpInput.Text = tostring(highJumpPower)
 	end
 end)
 
--- Warp Toggle
 warpToggle.MouseButton1Click:Connect(function()
 	warpJumpEnabled = not warpJumpEnabled
-	if warpJumpEnabled then
-		warpToggle.Text = "ON"
-		warpToggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-	else
-		warpToggle.Text = "OFF"
-		warpToggle.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	end
+	warpToggle.Text = warpJumpEnabled and "ON" or "OFF"
+	warpToggle.BackgroundColor3 = warpJumpEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(70,70,70)
 end)
 
--- Warp Input update
 warpInput.FocusLost:Connect(function()
 	local num = tonumber(warpInput.Text)
 	if num and num >= 1 and num <= 500 then
@@ -232,37 +273,11 @@ warpInput.FocusLost:Connect(function()
 	end
 end)
 
--- ตั้ง jump เริ่มต้น
-setJumpPower(defaultJumpPower)
-
--- ฟังก์ชัน Warp Jump ตอนกระโดด
-local function setupWarpJump(humanoid, rootPart)
-	humanoid.Jumping:Connect(function(isJumping)
-		if isJumping and warpJumpEnabled then
-			rootPart.CFrame = rootPart.CFrame + Vector3.new(0, warpJumpPower, 0)
-		end
-	end)
-end
-
--- โหลดตัวละครใหม่
-player.CharacterAdded:Connect(function(char)
-	local humanoid = char:WaitForChild("Humanoid")
-	local root = char:WaitForChild("HumanoidRootPart")
-	humanoid.UseJumpPower = true
-	wait(0.1)
-	if highJumpEnabled then
-		setJumpPower(highJumpPower)
-	else
-		setJumpPower(defaultJumpPower)
+noclipToggle.MouseButton1Click:Connect(function()
+	noClipEnabled = not noClipEnabled
+	noclipToggle.Text = noClipEnabled and "ON" or "OFF"
+	noclipToggle.BackgroundColor3 = noClipEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(70,70,70)
+	if noClipEnabled then
+		removeDoors()
 	end
-	setupWarpJump(humanoid, root)
 end)
-
--- ถ้าตัวโหลดแล้ว
-if player.Character then
-	local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-	local root = player.Character:FindFirstChild("HumanoidRootPart")
-	if humanoid and root then
-		setupWarpJump(humanoid, root)
-	end
-end
