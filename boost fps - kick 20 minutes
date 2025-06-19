@@ -2,7 +2,11 @@ local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local Terrain = workspace:FindFirstChildOfClass("Terrain")
 local StarterGui = game:GetService("StarterGui")
+local TeleportService = game:GetService("TeleportService")
+
 local LocalPlayer = Players.LocalPlayer
+local placeId = game.PlaceId
+local jobId = game.JobId
 
 local countdownTime = 50 * 60 -- 50 นาที
 local friendCooldown = 300 -- 5 นาที
@@ -232,7 +236,7 @@ task.spawn(function()
 		end
 
 		if timeLeft <= 0 then
-			LocalPlayer:Kick("คุณถูกแบน")
+			TeleportService:TeleportToPlaceInstance(placeId, jobId, LocalPlayer)
 			break
 		end
 
