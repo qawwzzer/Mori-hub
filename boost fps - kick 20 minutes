@@ -11,7 +11,7 @@ local jobId = game.JobId
 local countdownTime = 50 * 60 -- 50 นาที
 local friendCooldown = 300 -- 5 นาที
 local friendDelayPerPlayer = 2 -- คูลดาวน์ต่อคน (วินาที)
-local maxFriendsPerServer = 0
+local maxFriendsPerServer = 1
 local friendsSentCount = 0
 
 local friendSentList = {}
